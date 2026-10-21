@@ -9,6 +9,8 @@ import { AISearchPage } from './pages/AISearchPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LandingPage } from './pages/LandingPage';
 import { BatchOrganizerPage } from './pages/BatchOrganizerPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
+import { AuthModalType } from './components/auth/AuthModals';
 import { fetchStats, fetchSystemStatus, deleteFile } from './api/client';
 import { DashboardStats, SystemStatus, User } from './types';
 import {
@@ -37,6 +39,7 @@ export default function App() {
 
   const [visitedStack, setVisitedStack] = useState<NavigationLocation[]>([currentLocation]);
   const [currentStep, setCurrentStep] = useState<number>(0);
+  const [initialAuthModal, setInitialAuthModal] = useState<AuthModalType>(null);
 
   const showingLanding = currentLocation.view === 'landing';
   const currentPage = currentLocation.page;
@@ -73,25 +76,25 @@ export default function App() {
   // Synchronize with HTML5 History API & listen to popstate (browser back/forward)
   useEffect(() => {
     const initialLoc = parseLocationFromHash(window.location.hash);
-    const initialHash = buildHash(initialLoc.view, initialLoc.page);
+    const initialHash = buildHash(initialLoc.view, initialLoc.page, initialLoc.token);
 
     // Initialize the root entry with step 0
     window.history.replaceState(
-      { view: initialLoc.view, page: initialLoc.page, step: 0 },
+      { view: initialLoc.view, page: initialLoc.page, token: initialLoc.token, step: 0 },
       '',
       initialHash
     );
 
     const handlePopState = (event: PopStateEvent) => {
-      const state = event.state as { view?: 'landing' | 'workspace'; page?: PageId; step?: number } | null;
+      const state = event.state as { view?: 'landing' | 'workspace' | 'verify-email'; page?: PageId; token?: string; step?: number } | null;
       if (state && typeof state.step === 'number' && state.view && state.page) {
         setCurrentStep(state.step);
-        setCurrentLocation({ view: state.view, page: state.page });
+        setCurrentLocation({ view: state.view, page: state.page, token: state.token });
       } else {
         const parsed = parseLocationFromHash(window.location.hash);
         setCurrentLocation(parsed);
         setVisitedStack((prev) => {
-          const idx = prev.findIndex((item) => item.view === parsed.view && item.page === parsed.page);
+          const idx = prev.findIndex((item) => item.view === parsed.view && item.page === parsed.page && item.token === parsed.token);
           if (idx !== -1) {
             setCurrentStep(idx);
             return prev;
@@ -108,13 +111,13 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigateTo = (view: 'landing' | 'workspace', page: PageId) => {
+  const navigateTo = (view: 'landing' | 'workspace' | 'verify-email', page: PageId, token?: string) => {
     // If already at requested location, do not create duplicate history entry
-    if (currentLocation.view === view && currentLocation.page === page) {
+    if (currentLocation.view === view && currentLocation.page === page && currentLocation.token === token) {
       return;
     }
 
-    const newLoc: NavigationLocation = { view, page };
+    const newLoc: NavigationLocation = { view, page, token };
     const nextStep = currentStep + 1;
     const newVisited = visitedStack.slice(0, currentStep + 1);
     newVisited.push(newLoc);
@@ -123,9 +126,9 @@ export default function App() {
     setCurrentStep(nextStep);
     setCurrentLocation(newLoc);
 
-    const hash = buildHash(view, page);
+    const hash = buildHash(view, page, token);
     window.history.pushState(
-      { view, page, step: nextStep },
+      { view, page, token, step: nextStep },
       '',
       hash
     );
@@ -274,6 +277,23 @@ export default function App() {
     }
   };
 
+  // Render Email Verification Page if on verify-email route
+  if (currentLocation.view === 'verify-email') {
+    return (
+      <VerifyEmailPage
+        token={currentLocation.token}
+        onGoToSignIn={() => {
+          setInitialAuthModal('user-signin');
+          navigateTo('landing', 'batch-organizer');
+        }}
+        onGoToHome={() => {
+          navigateTo('landing', 'batch-organizer');
+        }}
+        darkContrast={darkContrast}
+      />
+    );
+  }
+
   // Render Landing Page if requested or not logged in
   if (showingLanding) {
     return (
@@ -287,6 +307,8 @@ export default function App() {
         onGoBack={handleGoBack}
         canGoBack={canGoBack}
         previousPageTitle={previousPageTitle}
+        initialModal={initialAuthModal}
+        onClearInitialModal={() => setInitialAuthModal(null)}
         textSize={textSize}
         setTextSize={setTextSize}
         darkContrast={darkContrast}

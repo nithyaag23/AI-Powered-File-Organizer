@@ -1,10 +1,11 @@
 import shutil
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pathlib import Path
 
 from ..config import UPLOAD_DIR, CHROMA_DIR, DB_PATH, OLLAMA_BASE_URL, DEFAULT_EMBED_MODEL
 from ..services.ollama_service import ollama_service
 from ..services.chroma_service import chroma_service
+from ..services.auth_service import get_current_user
 from ..database import clear_all_records, get_stats
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
@@ -51,7 +52,7 @@ def system_status():
     }
 
 @router.post("/clear-all")
-def clear_all():
+def clear_all(current_user: dict = Depends(get_current_user)):
     # Clear database records
     deleted_count = clear_all_records()
 

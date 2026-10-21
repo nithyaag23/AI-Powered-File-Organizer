@@ -22,6 +22,8 @@ interface LandingPageProps {
   onGoBack?: () => void;
   canGoBack?: boolean;
   previousPageTitle?: string | null;
+  initialModal?: AuthModalType;
+  onClearInitialModal?: () => void;
   textSize?: string;
   setTextSize?: (size: string) => void;
   darkContrast?: boolean;
@@ -38,13 +40,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onGoBack,
   canGoBack = false,
   previousPageTitle,
+  initialModal,
+  onClearInitialModal,
   textSize: propTextSize,
   setTextSize: propSetTextSize,
   darkContrast: propDarkContrast,
   setDarkContrast: propSetDarkContrast,
 }) => {
-  const [activeModal, setActiveModal] = useState<AuthModalType>(null);
+  const [activeModal, setActiveModal] = useState<AuthModalType>(initialModal || null);
   const [showAccessibility, setShowAccessibility] = useState(false);
+
+  useEffect(() => {
+    if (initialModal) {
+      setActiveModal(initialModal);
+      if (onClearInitialModal) onClearInitialModal();
+    }
+  }, [initialModal]);
 
   // Text size state (synced with localStorage & root HTML font size)
   const [localTextSize, setLocalTextSize] = useState<string>(() => {

@@ -1,6 +1,17 @@
 import { DashboardStats, FileItem, DuplicateGroup, SemanticSearchResult, SystemStatus, CategoryName } from '../types';
+import { getActiveSession } from '../utils/session';
 
 export const API_BASE = '/api';
+
+function getAuthHeaders(): Record<string, string> {
+  try {
+    const session = getActiveSession();
+    if (session && session.token) {
+      return { Authorization: `Bearer ${session.token}` };
+    }
+  } catch {}
+  return {};
+}
 
 export async function fetchStats(): Promise<DashboardStats> {
   const res = await fetch(`${API_BASE}/stats`);
@@ -113,16 +124,23 @@ export async function fetchSystemStatus(): Promise<SystemStatus> {
 export async function clearAllData(): Promise<{ status: string; message: string }> {
   const res = await fetch(`${API_BASE}/settings/clear-all`, {
     method: 'POST',
+    headers: {
+      ...getAuthHeaders()
+    }
   });
   if (!res.ok) throw new Error(`Failed to reset data: ${res.statusText}`);
   return res.json();
 }
 
-export async function loginUser(email: string, password: string): Promise<import('../types').AuthResponse> {
+export async function loginUser(
+  email: string,
+  password: string,
+  role: 'admin' | 'user' = 'user'
+): Promise<import('../types').LoginChallengeResponse> {
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, role }),
   });
   const data = await res.json();
   if (!res.ok) {
@@ -131,11 +149,42 @@ export async function loginUser(email: string, password: string): Promise<import
   return data;
 }
 
+export async function verifyLoginOtp(
+  challenge_id: string,
+  otp: string
+): Promise<import('../types').AuthResponse> {
+  const res = await fetch(`${API_BASE}/auth/verify-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ challenge_id, otp }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || 'Invalid or expired verification code.');
+  }
+  return data;
+}
+
+export async function resendLoginOtp(
+  challenge_id: string
+): Promise<import('../types').ResendOtpResponse> {
+  const res = await fetch(`${API_BASE}/auth/resend-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ challenge_id }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || 'Failed to resend login code.');
+  }
+  return data;
+}
+
 export async function registerUser(
   email: string,
   password: string,
   role: 'admin' | 'user' = 'user'
-): Promise<import('../types').AuthResponse> {
+): Promise<import('../types').RegisterResponse> {
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -144,6 +193,32 @@ export async function registerUser(
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.detail || 'Registration failed.');
+  }
+  return data;
+}
+
+export async function verifyEmail(token: string): Promise<import('../types').VerifyEmailResponse> {
+  const res = await fetch(`${API_BASE}/auth/verify-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || 'Verification failed. Token may be invalid or expired.');
+  }
+  return data;
+}
+
+export async function resendVerification(email: string): Promise<import('../types').ResendVerificationResponse> {
+  const res = await fetch(`${API_BASE}/auth/resend-verification`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || 'Failed to resend verification email.');
   }
   return data;
 }

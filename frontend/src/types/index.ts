@@ -86,12 +86,48 @@ export interface User {
   id: string;
   email: string;
   role: 'admin' | 'user';
+  is_verified?: boolean;
   created_at: string;
 }
 
 export interface AuthResponse {
   token: string;
   user: User;
+  message: string;
+}
+
+export interface LoginChallengeResponse {
+  status: 'otp_required';
+  challenge_id: string;
+  email: string;
+  message: string;
+  expires_in: number;
+}
+
+export interface ResendOtpResponse {
+  success: boolean;
+  challenge_id: string;
+  message: string;
+  expires_in: number;
+}
+
+export interface RegisterResponse {
+  status: string;
+  message: string;
+  email: string;
+  role: string;
+  challenge_id?: string;
+  expires_in?: number;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+  email?: string;
+}
+
+export interface ResendVerificationResponse {
+  success: boolean;
   message: string;
 }
 

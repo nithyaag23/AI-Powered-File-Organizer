@@ -38,9 +38,72 @@ def init_db():
                 email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 role TEXT NOT NULL,
+                is_verified INTEGER DEFAULT 0,
+                last_verification_sent_at TEXT,
                 created_at TEXT NOT NULL
             )
         """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                token_hash TEXT NOT NULL UNIQUE,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                used_at TEXT,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS login_challenges (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                challenge_id TEXT NOT NULL UNIQUE,
+                otp_hash TEXT NOT NULL,
+                attempts INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                last_sent_at TEXT NOT NULL,
+                used_at TEXT,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                token_hash TEXT NOT NULL UNIQUE,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pending_registrations (
+                id TEXT PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'user',
+                otp_hash TEXT NOT NULL DEFAULT '',
+                token_hash TEXT NOT NULL DEFAULT '',
+                attempts INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                last_sent_at TEXT NOT NULL
+            )
+        """)
+
+        # Migration: ensure pending_registrations columns exist
+        cursor.execute("PRAGMA table_info(pending_registrations)")
+        existing_pending_cols = {row["name"] for row in cursor.fetchall()}
+        if "otp_hash" not in existing_pending_cols:
+            cursor.execute("ALTER TABLE pending_registrations ADD COLUMN otp_hash TEXT NOT NULL DEFAULT ''")
+        if "attempts" not in existing_pending_cols:
+            cursor.execute("ALTER TABLE pending_registrations ADD COLUMN attempts INTEGER DEFAULT 0")
 
         # Migration: ensure new columns exist if table was already created
         cursor.execute("PRAGMA table_info(files)")
@@ -54,11 +117,28 @@ def init_db():
         if "tags" not in existing_cols:
             cursor.execute("ALTER TABLE files ADD COLUMN tags TEXT DEFAULT '[]'")
 
+        # Migration: ensure users columns exist
+        cursor.execute("PRAGMA table_info(users)")
+        existing_user_cols = {row["name"] for row in cursor.fetchall()}
+        if "is_verified" not in existing_user_cols:
+            cursor.execute("ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 0")
+            cursor.execute("UPDATE users SET is_verified = 1 WHERE email IN ('admin@fileorganizer.ai', 'user@fileorganizer.ai')")
+        if "last_verification_sent_at" not in existing_user_cols:
+            cursor.execute("ALTER TABLE users ADD COLUMN last_verification_sent_at TEXT")
+
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_file_hash ON files(file_hash)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_category ON files(category)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_subfolder ON files(subfolder)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_created_at ON files(created_at)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_email ON users(email)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_verification_token_hash ON email_verification_tokens(token_hash)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_verification_user_id ON email_verification_tokens(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_challenge_id ON login_challenges(challenge_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_challenge_user_id ON login_challenges(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_session_token_hash ON sessions(token_hash)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_pending_reg_email ON pending_registrations(email)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_pending_reg_token ON pending_registrations(token_hash)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_session_user_id ON sessions(user_id)")
         conn.commit()
 
     # Seed default admin and user
@@ -298,18 +378,40 @@ def backfill_existing_files():
                 ))
         conn.commit()
 
-def create_user(email: str, password_hash: str, role: str = "user") -> Dict[str, Any]:
+def create_user(email: str, password_hash: str, role: str = "user", is_verified: int = 0) -> Dict[str, Any]:
     import uuid
     user_id = str(uuid.uuid4())
     now = datetime.utcnow().isoformat()
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO users (id, email, password_hash, role, created_at)
-            VALUES (?, ?, ?, ?, ?)
-        """, (user_id, email.lower().strip(), password_hash, role, now))
+            INSERT INTO users (id, email, password_hash, role, is_verified, last_verification_sent_at, created_at)
+            VALUES (?, ?, ?, ?, ?, NULL, ?)
+        """, (user_id, email.lower().strip(), password_hash, role, is_verified, now))
         conn.commit()
-    return {"id": user_id, "email": email.lower().strip(), "role": role, "created_at": now}
+    return {
+        "id": user_id,
+        "email": email.lower().strip(),
+        "role": role,
+        "is_verified": is_verified,
+        "last_verification_sent_at": None,
+        "created_at": now
+    }
+
+def delete_user(user_id: str) -> None:
+    """Delete user and all associated tokens (e.g. if email dispatch fails on signup)."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM email_verification_tokens WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+
+def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
 
 def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
     with get_connection() as conn:
@@ -318,10 +420,168 @@ def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
         row = cursor.fetchone()
         return dict(row) if row else None
 
+def set_user_verified(user_id: str) -> bool:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET is_verified = 1 WHERE id = ?", (user_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+
+def update_last_verification_sent(user_id: str, timestamp_iso: str) -> None:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET last_verification_sent_at = ? WHERE id = ?", (timestamp_iso, user_id))
+        conn.commit()
+
+def create_verification_token(user_id: str, token_hash: str, expires_at_iso: str) -> Dict[str, Any]:
+    import uuid
+    token_id = str(uuid.uuid4())
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO email_verification_tokens (id, user_id, token_hash, created_at, expires_at, used_at)
+            VALUES (?, ?, ?, ?, ?, NULL)
+        """, (token_id, user_id, token_hash, now, expires_at_iso))
+        conn.commit()
+    return {
+        "id": token_id,
+        "user_id": user_id,
+        "token_hash": token_hash,
+        "created_at": now,
+        "expires_at": expires_at_iso,
+        "used_at": None
+    }
+
+def get_verification_token_by_hash(token_hash: str) -> Optional[Dict[str, Any]]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM email_verification_tokens WHERE token_hash = ?", (token_hash,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+def mark_verification_token_used(token_id: str) -> None:
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE email_verification_tokens SET used_at = ? WHERE id = ?", (now, token_id))
+        conn.commit()
+
+def invalidate_user_verification_tokens(user_id: str) -> None:
+    """Invalidate all prior unused verification tokens for a given user."""
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE email_verification_tokens
+            SET used_at = ?
+            WHERE user_id = ? AND used_at IS NULL
+        """, (now, user_id))
+        conn.commit()
+
+# ==============================================================================
+# Pending Registrations (Staging before email is verified)
+# ==============================================================================
+
+def create_or_update_pending_registration(
+    email: str,
+    password_hash: str,
+    role: str,
+    otp_hash: str,
+    token_hash: str,
+    expires_at_iso: str
+) -> Dict[str, Any]:
+    """
+    Stage an unverified registration with an OTP challenge.
+    The users table is NEVER touched until OTP verification succeeds!
+    If a pending registration for this email already exists, replace it cleanly so the user is never blocked.
+    """
+    import uuid
+    clean_email = email.lower().strip()
+    record_id = f"reg_{uuid.uuid4().hex}"
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM pending_registrations WHERE email = ?", (clean_email,))
+        cursor.execute("""
+            INSERT INTO pending_registrations (id, email, password_hash, role, otp_hash, token_hash, attempts, created_at, expires_at, last_sent_at)
+            VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
+        """, (record_id, clean_email, password_hash, role, otp_hash, token_hash, now, expires_at_iso, now))
+        conn.commit()
+    return {
+        "id": record_id,
+        "challenge_id": record_id,
+        "email": clean_email,
+        "role": role,
+        "otp_hash": otp_hash,
+        "token_hash": token_hash,
+        "attempts": 0,
+        "created_at": now,
+        "expires_at": expires_at_iso,
+        "last_sent_at": now
+    }
+
+def get_pending_registration_by_id(record_id: str) -> Optional[Dict[str, Any]]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM pending_registrations WHERE id = ?", (record_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+def increment_pending_registration_attempts(record_id: str) -> int:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE pending_registrations SET attempts = attempts + 1 WHERE id = ?", (record_id,))
+        cursor.execute("SELECT attempts FROM pending_registrations WHERE id = ?", (record_id,))
+        row = cursor.fetchone()
+        conn.commit()
+        return row["attempts"] if row else 1
+
+def update_pending_registration_otp(record_id: str, new_otp_hash: str, new_token_hash: str, new_expires_at: str, now_iso: str) -> None:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE pending_registrations
+            SET otp_hash = ?, token_hash = ?, expires_at = ?, last_sent_at = ?, attempts = 0
+            WHERE id = ?
+        """, (new_otp_hash, new_token_hash, new_expires_at, now_iso, record_id))
+        conn.commit()
+
+def get_pending_registration_by_token(token_hash: str) -> Optional[Dict[str, Any]]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM pending_registrations WHERE token_hash = ?", (token_hash,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+def get_pending_registration_by_email(email: str) -> Optional[Dict[str, Any]]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM pending_registrations WHERE email = ?", (email.lower().strip(),))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+def update_pending_registration_token(email: str, token_hash: str, expires_at_iso: str) -> None:
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE pending_registrations
+            SET token_hash = ?, expires_at = ?, last_sent_at = ?
+            WHERE email = ?
+        """, (token_hash, expires_at_iso, now, email.lower().strip()))
+        conn.commit()
+
+def delete_pending_registration(email: str) -> None:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM pending_registrations WHERE email = ?", (email.lower().strip(),))
+        conn.commit()
+
 def list_users() -> List[Dict[str, Any]]:
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, email, role, created_at FROM users ORDER BY created_at ASC")
+        cursor.execute("SELECT id, email, role, is_verified, created_at FROM users ORDER BY created_at ASC")
         return [dict(row) for row in cursor.fetchall()]
 
 def seed_default_users():
@@ -336,10 +596,139 @@ def seed_default_users():
             admin_hash = hash_password("Admin@12345#")
             user_hash = hash_password("User@12345#")
             cursor.execute("""
-                INSERT INTO users (id, email, password_hash, role, created_at)
+                INSERT INTO users (id, email, password_hash, role, is_verified, last_verification_sent_at, created_at)
                 VALUES
-                ('admin-default-id', 'admin@fileorganizer.ai', ?, 'admin', ?),
-                ('user-default-id', 'user@fileorganizer.ai', ?, 'user', ?)
+                ('admin-default-id', 'admin@fileorganizer.ai', ?, 'admin', 1, NULL, ?),
+                ('user-default-id', 'user@fileorganizer.ai', ?, 'user', 1, NULL, ?)
             """, (admin_hash, datetime.utcnow().isoformat(), user_hash, datetime.utcnow().isoformat()))
             conn.commit()
+
+# ==============================================================================
+# Login Challenge & OTP Management
+# ==============================================================================
+
+def create_login_challenge(user_id: str, challenge_id: str, otp_hash: str, expires_at_iso: str) -> Dict[str, Any]:
+    import uuid
+    record_id = str(uuid.uuid4())
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO login_challenges (id, user_id, challenge_id, otp_hash, attempts, created_at, expires_at, last_sent_at, used_at)
+            VALUES (?, ?, ?, ?, 0, ?, ?, ?, NULL)
+        """, (record_id, user_id, challenge_id, otp_hash, now, expires_at_iso, now))
+        conn.commit()
+    return {
+        "id": record_id,
+        "user_id": user_id,
+        "challenge_id": challenge_id,
+        "otp_hash": otp_hash,
+        "attempts": 0,
+        "created_at": now,
+        "expires_at": expires_at_iso,
+        "last_sent_at": now,
+        "used_at": None
+    }
+
+def get_login_challenge(challenge_id: str) -> Optional[Dict[str, Any]]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM login_challenges WHERE challenge_id = ?", (challenge_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+def increment_challenge_attempts(challenge_id: str) -> int:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE login_challenges
+            SET attempts = attempts + 1
+            WHERE challenge_id = ?
+        """, (challenge_id,))
+        conn.commit()
+        cursor.execute("SELECT attempts FROM login_challenges WHERE challenge_id = ?", (challenge_id,))
+        row = cursor.fetchone()
+        return row["attempts"] if row else 1
+
+def update_login_challenge_otp(challenge_id: str, new_otp_hash: str, new_expires_at: str, sent_at_iso: str) -> None:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE login_challenges
+            SET otp_hash = ?, expires_at = ?, last_sent_at = ?, attempts = 0
+            WHERE challenge_id = ?
+        """, (new_otp_hash, new_expires_at, sent_at_iso, challenge_id))
+        conn.commit()
+
+def mark_challenge_used(challenge_id: str) -> None:
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE login_challenges SET used_at = ? WHERE challenge_id = ?", (now, challenge_id))
+        conn.commit()
+
+def invalidate_user_login_challenges(user_id: str) -> None:
+    """Invalidate all prior unused login challenges for a user."""
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE login_challenges
+            SET used_at = ?
+            WHERE user_id = ? AND used_at IS NULL
+        """, (now, user_id))
+        conn.commit()
+
+# ==============================================================================
+# Authenticated Session Management
+# ==============================================================================
+
+def create_session(user_id: str, raw_token: str, expires_at_iso: str) -> Dict[str, Any]:
+    import uuid
+    from .services.auth_service import hash_token
+    session_id = str(uuid.uuid4())
+    token_hash = hash_token(raw_token)
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (session_id, user_id, token_hash, now, expires_at_iso))
+        conn.commit()
+    return {
+        "id": session_id,
+        "user_id": user_id,
+        "token_hash": token_hash,
+        "created_at": now,
+        "expires_at": expires_at_iso
+    }
+
+def get_session_by_token(raw_token: str) -> Optional[Dict[str, Any]]:
+    from .services.auth_service import hash_token
+    token_hash = hash_token(raw_token)
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM sessions
+            WHERE token_hash = ? AND expires_at > ?
+        """, (token_hash, now))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+def delete_session_by_token(raw_token: str) -> None:
+    from .services.auth_service import hash_token
+    token_hash = hash_token(raw_token)
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+        conn.commit()
+
+def cleanup_expired_sessions() -> None:
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM sessions WHERE expires_at <= ?", (now,))
+        conn.commit()
 
