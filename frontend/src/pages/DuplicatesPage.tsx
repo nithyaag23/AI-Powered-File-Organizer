@@ -95,7 +95,7 @@ export const DuplicatesPage: React.FC<DuplicatesPageProps> = ({ onRefreshStats }
       </div>
 
       {successMsg && (
-        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
+        <div className="p-4 rounded-xl bg-[#7FA080]/15 border border-emerald-200 text-[#3F6241] text-sm flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>{successMsg}</span>
         </div>
@@ -111,13 +111,13 @@ export const DuplicatesPage: React.FC<DuplicatesPageProps> = ({ onRefreshStats }
 
         <div className="card p-4">
           <span className="text-xs font-semibold text-slate-500 uppercase">Redundant Copies</span>
-          <div className="text-2xl font-extrabold text-amber-600 mt-1">{totalDuplicateCopies}</div>
+          <div className="text-2xl font-extrabold text-[#C49A70] mt-1">{totalDuplicateCopies}</div>
           <p className="text-xs text-slate-400 mt-0.5">Files safe to remove</p>
         </div>
 
         <div className="card p-4">
           <span className="text-xs font-semibold text-slate-500 uppercase">Reclaimable Space</span>
-          <div className="text-2xl font-extrabold text-emerald-600 mt-1">{formatBytes(totalWastedBytes)}</div>
+          <div className="text-2xl font-extrabold text-[#7FA080] mt-1">{formatBytes(totalWastedBytes)}</div>
           <p className="text-xs text-slate-400 mt-0.5">Space wasted by extra copies</p>
         </div>
       </div>
@@ -125,11 +125,11 @@ export const DuplicatesPage: React.FC<DuplicatesPageProps> = ({ onRefreshStats }
       {/* Duplicates List */}
       {loading ? (
         <div className="flex items-center justify-center min-h-[300px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7CA7A6]"></div>
         </div>
       ) : duplicateGroups.length === 0 ? (
         <div className="card p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-[#7FA080]/15 text-[#7FA080] flex items-center justify-center mx-auto">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <h3 className="font-bold text-slate-800 text-base">Zero Duplicates Detected</h3>
@@ -141,9 +141,9 @@ export const DuplicatesPage: React.FC<DuplicatesPageProps> = ({ onRefreshStats }
         <div className="space-y-4">
           {duplicateGroups.map((group, groupIdx) => (
             <div key={group.hash} className="card overflow-hidden">
-              <div className="bg-slate-50/80 px-5 py-3 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+              <div className="bg-slate-50/80 px-5 py-3 border-b border-[#ECE6DE] flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-md bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center">
+                  <span className="w-6 h-6 rounded-md bg-[#C49A70]/20 text-[#82552B] font-bold text-xs flex items-center justify-center">
                     {groupIdx + 1}
                   </span>
                   <span className="text-xs font-mono text-slate-600 font-semibold truncate max-w-xs md:max-w-md">
@@ -154,7 +154,7 @@ export const DuplicatesPage: React.FC<DuplicatesPageProps> = ({ onRefreshStats }
                   <span className="font-semibold text-slate-700">
                     {group.count} Identical Copies ({formatBytes(group.file_size)} each)
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">
+                  <span className="px-2 py-0.5 rounded bg-[#C49A70]/20 text-[#82552B] font-bold">
                     {formatBytes(group.wasted_size)} Wasted
                   </span>
                 </div>
@@ -169,20 +169,20 @@ export const DuplicatesPage: React.FC<DuplicatesPageProps> = ({ onRefreshStats }
                     <div
                       key={file.id}
                       className={`p-4 flex items-center justify-between transition-colors ${
-                        isOriginal ? 'bg-emerald-50/20' : 'hover:bg-slate-50/60'
+                        isOriginal ? 'bg-[#7FA080]/15/20' : 'hover:bg-slate-50/60'
                       }`}
                     >
                       <div className="flex items-center gap-3 truncate max-w-md">
-                        <Copy className={`w-4 h-4 shrink-0 ${isOriginal ? 'text-emerald-600' : 'text-slate-400'}`} />
+                        <Copy className={`w-4 h-4 shrink-0 ${isOriginal ? 'text-[#7FA080]' : 'text-slate-400'}`} />
                         <div className="truncate">
                           <div className="font-semibold text-slate-800 text-sm truncate flex items-center gap-2">
                             <span>{file.original_name}</span>
                             {isOriginal ? (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-emerald-100 text-emerald-800">
+                              <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-[#7FA080]/20 text-[#3F6241]">
                                 Original (Earliest)
                               </span>
                             ) : (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-amber-100 text-amber-800">
+                              <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-[#C49A70]/20 text-[#82552B]">
                                 Duplicate Copy
                               </span>
                             )}
@@ -201,7 +201,7 @@ export const DuplicatesPage: React.FC<DuplicatesPageProps> = ({ onRefreshStats }
                           <a
                             href={getDownloadUrl(file.id)}
                             download={file.original_name}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-[#7CA7A6] hover:bg-[#F4EFEA]"
                             title="Download Copy"
                           >
                             <Download className="w-4 h-4" />

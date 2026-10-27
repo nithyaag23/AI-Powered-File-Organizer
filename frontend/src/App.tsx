@@ -320,13 +320,13 @@ export default function App() {
   return (
     <div
       className={`min-h-screen flex flex-col md:flex-row font-sans transition-colors duration-200 ${
-        darkContrast ? 'bg-black text-white' : 'bg-slate-50 text-slate-800'
+        darkContrast ? 'bg-black text-white' : 'bg-[#FAF8F5] text-slate-800'
       }`}
     >
       {/* Mobile Header */}
       <div
         className={`md:hidden p-4 flex items-center justify-between sticky top-0 z-50 border-b ${
-          darkContrast ? 'bg-black border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'
+          darkContrast ? 'bg-black border-white/20 text-white' : 'bg-[#FAF8F5]/90 backdrop-blur-sm border-[#ECE6DE] text-slate-900'
         }`}
       >
         <div className="flex items-center gap-2">
@@ -336,7 +336,7 @@ export default function App() {
               className={`p-1.5 rounded-lg border transition-colors ${
                 darkContrast
                   ? 'border-white/20 text-white hover:bg-zinc-900'
-                  : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-50 shadow-sm'
+                  : 'border-[#ECE6DE] text-slate-700 bg-white hover:bg-[#F4EFEA] shadow-xs'
               }`}
               title={`Go back to ${previousPageTitle || 'Previous'}`}
               aria-label="Go Back"
@@ -344,11 +344,11 @@ export default function App() {
               <ArrowLeft className="w-4 h-4" />
             </button>
           )}
-          <div className="font-bold text-base">FileOrganizer AI</div>
+          <div className="font-bold text-base"><span className="text-[#7CA7A6] font-extrabold">FileOrganizer</span> AI</div>
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className={`p-2 rounded-lg ${darkContrast ? 'bg-zinc-900 text-white' : 'bg-slate-100 text-slate-700'}`}
+          className={`p-2 rounded-lg ${darkContrast ? 'bg-zinc-900 text-white' : 'bg-[#F4EFEA] text-slate-700 border border-[#ECE6DE]'}`}
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -403,15 +403,15 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 p-5 md:p-10 max-w-7xl w-full overflow-y-auto">
         {/* Navigation Breadcrumb & Back Bar */}
-        <div className="flex items-center justify-between pb-3.5 mb-6 border-b border-slate-200/80">
+        <div className="flex items-center justify-between pb-3.5 mb-6 border-b border-[#ECE6DE]">
           <div className="flex items-center gap-3">
             {canGoBack && (
               <button
                 onClick={handleGoBack}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-sm transition-all ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-xs transition-all ${
                   darkContrast
                     ? 'border-white/20 bg-zinc-900 text-white hover:bg-zinc-800'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100/80 hover:text-slate-900 hover:border-slate-300'
+                    : 'border-[#ECE6DE] bg-white text-slate-700 hover:bg-[#F4EFEA] hover:text-slate-900 hover:border-[#DFD7CC]'
                 }`}
                 title={`Go back to ${previousPageTitle || 'Previous'}`}
               >
@@ -423,7 +423,7 @@ export default function App() {
             <div className={`text-xs flex items-center gap-1.5 font-medium ${darkContrast ? 'text-zinc-400' : 'text-slate-400'}`}>
               <span>Workspace</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-              <span className={`font-semibold ${darkContrast ? 'text-zinc-200' : 'text-slate-700'}`}>
+              <span className={`font-semibold ${darkContrast ? 'text-zinc-200' : 'text-[#406665]'}`}>
                 {PAGE_TITLES[currentPage] || currentPage}
               </span>
             </div>
@@ -431,16 +431,16 @@ export default function App() {
         </div>
 
         {!backendOnline && !loading && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex items-center justify-between">
+          <div className="mb-6 p-4 rounded-2xl bg-[#C49A70]/10 border border-[#C49A70]/30 text-[#82552B] text-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <AlertCircle className="w-5 h-5 text-[#C49A70] shrink-0" />
               <span>
                 Backend server is connecting at <strong>http://127.0.0.1:8000</strong>. If the server is still booting up, stats will sync automatically.
               </span>
             </div>
             <button
               onClick={loadData}
-              className="text-xs font-bold underline ml-3 shrink-0"
+              className="text-xs font-bold underline ml-3 shrink-0 hover:text-[#5F3B1A]"
             >
               Retry Connection
             </button>

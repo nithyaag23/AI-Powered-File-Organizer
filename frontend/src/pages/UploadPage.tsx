@@ -84,7 +84,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onUploadSuccess, onNavig
         onDragLeave={() => setDragOver(false)}
         onDrop={handleFileDrop}
         className={`card p-10 border-2 border-dashed text-center transition-all ${
-          dragOver ? 'border-blue-500 bg-blue-50/50' : 'border-slate-300 hover:border-slate-400'
+          dragOver ? 'border-[#7CA7A6] bg-[#7CA7A6]/10' : 'border-[#DFD7CC] hover:border-[#7CA7A6]'
         }`}
       >
         <input
@@ -94,7 +94,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onUploadSuccess, onNavig
           className="hidden"
           onChange={handleFileInput}
         />
-        <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
+        <div className="w-14 h-14 rounded-2xl bg-[#7CA7A6]/10 text-[#7CA7A6] flex items-center justify-center mx-auto mb-4">
           <UploadCloud className="w-7 h-7" />
         </div>
         <h3 className="text-base font-bold text-slate-800">Drag & Drop files here</h3>
@@ -131,10 +131,10 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onUploadSuccess, onNavig
             {selectedFiles.map((file, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-sm"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-[#ECE6DE]/60 text-sm"
               >
                 <div className="flex items-center gap-3 truncate">
-                  <File className="w-4 h-4 text-blue-600 shrink-0" />
+                  <File className="w-4 h-4 text-[#7FA080] shrink-0" />
                   <span className="font-medium text-slate-800 truncate">{file.name}</span>
                   <span className="text-xs text-slate-400">{formatBytes(file.size)}</span>
                 </div>
@@ -180,7 +180,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onUploadSuccess, onNavig
             </div>
             <button
               onClick={() => onNavigate('all-files')}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              className="text-xs font-semibold text-[#7FA080] hover:text-[#689493] flex items-center gap-1"
             >
               View in All Files <ArrowRight className="w-3.5 h-3.5" />
             </button>

@@ -8,7 +8,6 @@ import {
   Sparkles,
   Settings,
   HardDrive,
-  Cpu,
   LogOut,
   Shield,
   User as UserIcon,
@@ -75,21 +74,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       className={`w-64 flex flex-col h-screen sticky top-0 shrink-0 select-none border-r transition-colors duration-200 relative ${
         darkContrast
           ? 'bg-black text-white border-white/20'
-          : 'bg-white text-slate-800 border-slate-200/90'
+          : 'bg-[#FAF8F5] text-slate-800 border-[#ECE6DE]'
       }`}
     >
       {/* Brand Header */}
       <div
         className={`p-6 border-b flex items-center justify-between transition-colors ${
-          darkContrast ? 'border-white/20' : 'border-slate-100'
+          darkContrast ? 'border-white/20' : 'border-[#ECE6DE]'
         }`}
       >
         <div className="flex items-center gap-3">
           <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md transition-colors ${
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-xs transition-colors ${
               darkContrast
                 ? 'bg-white text-black shadow-white/10'
-                : 'bg-blue-600 text-white shadow-blue-500/20'
+                : 'bg-[#7CA7A6] text-white shadow-[#7CA7A6]/30'
             }`}
           >
             <HardDrive className="w-5 h-5" />
@@ -104,7 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </h1>
             <p
               className={`text-xs font-semibold tracking-wide transition-colors ${
-                darkContrast ? 'text-zinc-400' : 'text-blue-600'
+                darkContrast ? 'text-zinc-400' : 'text-[#7CA7A6]'
               }`}
             >
               AI-POWERED
@@ -116,10 +115,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {setTextSize && setDarkContrast && (
           <button
             onClick={() => setShowAccessibility(!showAccessibility)}
-            className={`p-1.5 rounded-lg border transition-colors shadow-sm ${
+            className={`p-1.5 rounded-lg border transition-colors shadow-xs ${
               darkContrast
                 ? 'border-white/40 text-white bg-zinc-900 hover:bg-zinc-800'
-                : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                : 'border-[#ECE6DE] text-slate-700 bg-white hover:bg-[#F4EFEA]'
             }`}
             title="Accessibility settings"
             aria-label="Accessibility settings"
@@ -137,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className={`w-full flex items-center gap-2.5 px-3.5 py-2 mb-2 rounded-xl text-xs font-semibold border transition-all ${
               darkContrast
                 ? 'border-white/20 text-zinc-300 hover:bg-zinc-900 hover:text-white'
-                : 'border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 shadow-sm'
+                : 'border-[#ECE6DE] text-slate-700 bg-white hover:bg-[#F4EFEA] hover:text-slate-900 shadow-xs'
             }`}
             title={`Go back to ${previousPageTitle || 'previous page'}`}
           >
@@ -162,11 +161,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 isActive
                   ? darkContrast
-                    ? 'bg-white text-black font-bold shadow-sm'
-                    : 'bg-blue-50 text-blue-600 shadow-sm shadow-blue-100/50'
+                    ? 'bg-white text-black font-bold shadow-xs'
+                    : 'bg-[#7CA7A6]/15 text-[#355A59] border border-[#7CA7A6]/30 font-bold shadow-xs'
                   : darkContrast
                   ? 'text-zinc-300 hover:bg-zinc-900 hover:text-white'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  : 'text-slate-600 hover:bg-[#F4EFEA] hover:text-slate-900'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -175,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     isActive
                       ? darkContrast
                         ? 'text-black'
-                        : 'text-blue-600'
+                        : 'text-[#7CA7A6]'
                       : darkContrast
                       ? 'text-zinc-400'
                       : 'text-slate-400'
@@ -188,7 +187,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className={`text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md ${
                     darkContrast
                       ? 'bg-zinc-800 text-zinc-200'
-                      : 'bg-blue-100 text-blue-700'
+                      : isActive
+                      ? 'bg-[#7CA7A6]/25 text-[#2A4B4A]'
+                      : 'bg-[#ECE6DE] text-slate-700'
                   }`}
                 >
                   {item.badge}
@@ -204,7 +205,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               darkContrast
                 ? 'text-zinc-300 hover:bg-zinc-900 hover:text-white'
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                : 'text-slate-500 hover:bg-[#F4EFEA] hover:text-slate-900'
             }`}
           >
             <Globe className="w-4 h-4 text-slate-400" />
@@ -220,7 +221,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className={`p-3 rounded-2xl border flex items-center justify-between transition-colors ${
               darkContrast
                 ? 'bg-zinc-950 border-white/20'
-                : 'bg-slate-50 border-slate-200/90'
+                : 'bg-white border-[#ECE6DE] shadow-xs'
             }`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
@@ -229,8 +230,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   darkContrast
                     ? 'bg-zinc-800 text-white'
                     : isAdmin
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'bg-blue-100 text-blue-700'
+                    ? 'bg-[#C49A70]/15 text-[#C49A70]'
+                    : 'bg-[#7FA080]/15 text-[#7FA080]'
                 }`}
               >
                 {isAdmin ? <Shield className="w-4 h-4" /> : <UserIcon className="w-4 h-4" />}
@@ -249,8 +250,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       darkContrast
                         ? 'bg-zinc-800 text-zinc-300'
                         : isAdmin
-                        ? 'bg-indigo-100 text-indigo-700'
-                        : 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#C49A70]/20 text-[#82552B]'
+                        : 'bg-[#7FA080]/20 text-[#3F6241]'
                     }`}
                   >
                     {currentUser.role}
@@ -265,8 +266,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 title="Log out"
                 className={`p-1.5 rounded-lg transition-colors ${
                   darkContrast
-                    ? 'text-zinc-400 hover:text-rose-400 hover:bg-zinc-800'
-                    : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                    ? 'text-zinc-400 hover:text-[#B8748C] hover:bg-zinc-800'
+                    : 'text-slate-400 hover:text-[#B8748C] hover:bg-[#B8748C]/10'
                 }`}
               >
                 <LogOut className="w-4 h-4" />
@@ -275,49 +276,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
       )}
-
-      {/* System Status Summary Widget */}
-      <div
-        className={`p-4 m-4 mt-1 rounded-2xl border space-y-2 text-xs transition-colors ${
-          darkContrast
-            ? 'bg-zinc-950 border-white/20 text-zinc-300'
-            : 'bg-slate-50 border-slate-200/80 text-slate-700'
-        }`}
-      >
-        <div className="flex items-center justify-between font-semibold">
-          <span className="flex items-center gap-1.5">
-            <Cpu className="w-3.5 h-3.5 text-slate-400" />
-            System Status
-          </span>
-          <span className={darkContrast ? 'text-zinc-400' : 'text-slate-500'}>{totalFiles} files</span>
-        </div>
-
-        <div
-          className={`space-y-1.5 pt-1 border-t ${
-            darkContrast ? 'border-white/10' : 'border-slate-200/60'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className={darkContrast ? 'text-zinc-400' : 'text-slate-500'}>FastAPI Backend</span>
-            <span className="flex items-center gap-1 font-medium">
-              <span className={`w-2 h-2 rounded-full ${backendOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-              <span className={backendOnline ? 'text-emerald-500 font-semibold' : 'text-rose-500 font-semibold'}>
-                {backendOnline ? 'Online' : 'Offline'}
-              </span>
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className={darkContrast ? 'text-zinc-400' : 'text-slate-500'}>Ollama AI</span>
-            <span className="flex items-center gap-1 font-medium">
-              <span className={`w-2 h-2 rounded-full ${ollamaOnline ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-              <span className={ollamaOnline ? 'text-emerald-500 font-semibold' : 'text-amber-500 font-semibold'}>
-                {ollamaOnline ? 'Ready' : 'Local Standby'}
-              </span>
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Accessibility popup when opened from sidebar */}
       {setTextSize && setDarkContrast && (

@@ -88,7 +88,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats }) =>
 
       {loading && !status ? (
         <div className="flex items-center justify-center min-h-[300px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7CA7A6]"></div>
         </div>
       ) : (
         <div className="space-y-5">
@@ -96,7 +96,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats }) =>
           <div className="card p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-[#7CA7A6]/10 text-[#7CA7A6] flex items-center justify-center">
                   <Server className="w-5 h-5" />
                 </div>
                 <div>
@@ -125,7 +125,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats }) =>
                     href="http://127.0.0.1:8000/docs"
                     target="_blank"
                     rel="noreferrer"
-                    className="font-bold text-blue-600 hover:underline inline-flex items-center gap-1"
+                    className="font-bold text-[#7CA7A6] hover:underline inline-flex items-center gap-1"
                   >
                     Open Swagger <ExternalLink className="w-3 h-3" />
                   </a>
@@ -171,14 +171,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats }) =>
               </div>
 
               {!status?.ollama?.connected && (
-                <div className="pt-2 border-t border-slate-200/60 text-slate-600 space-y-1.5">
+                <div className="pt-2 border-t border-[#ECE6DE]/60 text-slate-600 space-y-1.5">
                   <p className="font-medium text-slate-700 flex items-center gap-1.5">
-                    <Terminal className="w-3.5 h-3.5 text-blue-600" />
+                    <Terminal className="w-3.5 h-3.5 text-[#7CA7A6]" />
                     How to enable local Ollama embeddings:
                   </p>
-                  <p className="text-slate-500">1. Download and start Ollama from <a href="https://ollama.com" target="_blank" rel="noreferrer" className="text-blue-600 underline">ollama.com</a>.</p>
+                  <p className="text-slate-500">1. Download and start Ollama from <a href="https://ollama.com" target="_blank" rel="noreferrer" className="text-[#7CA7A6] underline">ollama.com</a>.</p>
                   <p className="text-slate-500">2. Run in terminal: <code className="bg-slate-200 px-1.5 py-0.5 rounded font-mono text-slate-800">ollama pull nomic-embed-text</code></p>
-                  <p className="text-xs text-blue-600 font-semibold mt-1">
+                  <p className="text-xs text-[#7CA7A6] font-semibold mt-1">
                     Note: Semantic search works right now using ChromaDB's built-in text vector indexing!
                   </p>
                 </div>

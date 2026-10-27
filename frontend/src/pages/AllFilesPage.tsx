@@ -85,7 +85,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
         <div>
           <a
             href={getOrganizedZipUrl()}
-            className="btn-primary"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#7FA080] hover:bg-[#6E936F] text-white font-semibold text-sm shadow-xs transition-all"
             title="Download ZIP with all files structured into folders"
           >
             <Package className="w-4 h-4" />
@@ -104,7 +104,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
               placeholder="Live search by filename, topic, or content..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-[#ECE6DE] text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#7CA7A6]/20 focus:border-[#7CA7A6]"
             />
           </div>
 
@@ -114,7 +114,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none"
+              className="px-3 py-1.5 rounded-xl bg-slate-50 border border-[#ECE6DE] text-xs font-semibold text-slate-700 focus:outline-none"
             >
               <option value="created_at">Date Uploaded</option>
               <option value="clean_name">Clean Name</option>
@@ -125,7 +125,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
             </select>
             <button
               onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-              className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+              className="p-2 rounded-xl bg-slate-50 border border-[#ECE6DE] text-slate-600 hover:bg-slate-100"
               title={`Order: ${sortOrder.toUpperCase()}`}
             >
               <ArrowUpDown className="w-3.5 h-3.5" />
@@ -142,7 +142,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 ${
                 selectedCategory === cat
-                  ? 'bg-blue-600 text-white shadow-sm'
+                  ? 'bg-[#7CA7A6] text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -155,7 +155,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
       {/* Files Table */}
       {loading ? (
         <div className="flex items-center justify-center min-h-[300px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7CA7A6]"></div>
         </div>
       ) : files.length === 0 ? (
         <div className="card p-12 text-center space-y-2">
@@ -169,7 +169,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50/80 border-b border-slate-200/80 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              <thead className="bg-slate-50/80 border-b border-[#ECE6DE]/80 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3">File & Topic</th>
                   <th className="px-5 py-3">Assigned Subfolder</th>
@@ -190,7 +190,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
                           {file.topic && (
-                            <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                            <span className="text-[11px] font-semibold text-[#4F7350] bg-[#7FA080]/15 px-2 py-0.5 rounded-md">
                               {file.topic}
                             </span>
                           )}
@@ -208,7 +208,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
 
                       <td className="px-5 py-3.5">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-slate-100 text-slate-700">
-                          <Folder className="w-3.5 h-3.5 text-blue-600" />
+                          <Folder className="w-3.5 h-3.5 text-[#7CA7A6]" />
                           {file.subfolder || 'General'}
                         </span>
                       </td>
@@ -226,7 +226,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
                           <a
                             href={getDownloadUrl(file.id)}
                             download={file.clean_name || file.original_name}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#7CA7A6] hover:bg-[#7FA080]/15 transition-colors"
                             title="Download with Clean Name"
                           >
                             <Download className="w-4 h-4" />
