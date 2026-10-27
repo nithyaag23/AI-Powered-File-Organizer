@@ -4,29 +4,29 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 font-sans selection:bg-blue-100 selection:text-blue-900;
+    @apply bg-[#FAF8F5] text-slate-800 font-sans selection:bg-[#7CA7A6]/20 selection:text-[#406665];
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 }
 
 .card {
-  @apply bg-white border border-slate-200/90 rounded-2xl shadow-sm transition-all duration-200;
+  @apply bg-white border border-[#ECE6DE] rounded-2xl shadow-sm transition-all duration-200;
 }
 
 .card-hover {
-  @apply hover:shadow-md hover:border-blue-200/80;
+  @apply hover:shadow-md hover:border-[#7CA7A6]/50;
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm;
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#7CA7A6] text-white font-semibold text-sm hover:bg-[#689493] active:bg-[#567D7C] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 active:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all;
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#ECE6DE] text-slate-700 font-semibold text-sm hover:bg-[#F4EFEA] active:bg-[#ECE6DE] disabled:opacity-50 disabled:cursor-not-allowed transition-all;
 }
 
 .btn-danger {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-semibold text-sm hover:bg-rose-100 active:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all;
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#B8748C]/10 text-[#8C465D] border border-[#B8748C]/30 font-semibold text-sm hover:bg-[#B8748C]/20 active:bg-[#B8748C]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all;
 }
 
 /* Custom scrollbars */
@@ -38,9 +38,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #D9D2C7;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #C2B8AA;
 }

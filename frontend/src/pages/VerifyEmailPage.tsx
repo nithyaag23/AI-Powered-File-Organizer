@@ -101,19 +101,19 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
       {/* Top Navbar */}
       <header
         className={`w-full py-4 px-6 md:px-12 flex items-center justify-between border-b ${
-          darkContrast ? 'bg-black border-white/20' : 'bg-white border-slate-200 shadow-sm'
+          darkContrast ? 'bg-black border-white/20' : 'bg-white border-[#ECE6DE] shadow-sm'
         }`}
       >
         <div className="flex items-center gap-3">
           <div
             className={`w-8 h-8 rounded-lg border flex items-center justify-center ${
-              darkContrast ? 'border-white text-white bg-zinc-900' : 'border-slate-300 text-[#0f2952] bg-white'
+              darkContrast ? 'border-white text-white bg-zinc-900' : 'border-[#ECE6DE] text-[#7CA7A6] bg-white'
             }`}
           >
             <Shield className="w-4 h-4" />
           </div>
           <div>
-            <span className={`font-bold text-sm md:text-base leading-tight ${darkContrast ? 'text-white' : 'text-[#0f2952]'}`}>
+            <span className={`font-bold text-sm md:text-base leading-tight ${darkContrast ? 'text-white' : 'text-[#7CA7A6]'}`}>
               FileOrganizer.ai
             </span>
             <span className={`block text-[11px] leading-none mt-0.5 ${darkContrast ? 'text-zinc-400' : 'text-slate-500'}`}>
@@ -127,7 +127,7 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
             darkContrast
               ? 'border-white/30 text-white hover:bg-zinc-900'
-              : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'
+              : 'border-[#ECE6DE] text-slate-700 bg-white hover:bg-slate-50'
           }`}
         >
           <Home className="w-3.5 h-3.5" />
@@ -139,13 +139,13 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6">
         <div
           className={`w-full max-w-lg rounded-2xl border p-8 md:p-10 shadow-xl transition-all ${
-            darkContrast ? 'bg-zinc-950 border-white/20' : 'bg-white border-slate-200'
+            darkContrast ? 'bg-zinc-950 border-white/20' : 'bg-white border-[#ECE6DE]'
           }`}
         >
           {/* 1. LOADING STATE */}
           {status === 'loading' && (
             <div className="text-center py-8 space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-[#7CA7A6]/10 text-[#7CA7A6] flex items-center justify-center mx-auto shadow-sm">
                 <Loader2 className="w-7 h-7 animate-spin" />
               </div>
               <h2 className={`text-xl font-bold ${darkContrast ? 'text-white' : 'text-slate-900'}`}>
@@ -160,7 +160,7 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
           {/* 2. SUCCESS STATE */}
           {status === 'success' && (
             <div className="text-center py-4 space-y-5">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-sm border border-emerald-100">
+              <div className="w-16 h-16 rounded-2xl bg-[#7FA080]/15 text-[#7FA080] flex items-center justify-center mx-auto shadow-sm border border-[#7FA080]/30">
                 <CheckCircle2 className="w-9 h-9 stroke-[2.5]" />
               </div>
               <div>
@@ -171,7 +171,7 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
                   {message}
                 </p>
                 {verifiedEmail && (
-                  <p className="mt-1 text-xs font-semibold text-blue-600">
+                  <p className="mt-1 text-xs font-semibold text-[#7FA080]">
                     Account: {verifiedEmail}
                   </p>
                 )}
@@ -183,7 +183,7 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
                   className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm flex items-center justify-center gap-2 ${
                     darkContrast
                       ? 'bg-white text-black hover:bg-zinc-200 font-bold'
-                      : 'bg-[#0f2952] hover:bg-[#1a3a6b] text-white'
+                      : 'bg-[#7CA7A6] hover:bg-[#689493] text-white'
                   }`}
                 >
                   <span>Sign In Now</span>
@@ -194,7 +194,7 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
                   className={`w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-sm border transition-all ${
                     darkContrast
                       ? 'border-white/30 text-white hover:bg-zinc-900'
-                      : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'
+                      : 'border-[#ECE6DE] text-slate-700 bg-white hover:bg-slate-50'
                   }`}
                 >
                   Return to Home
@@ -207,7 +207,7 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
           {status === 'error' && (
             <div className="space-y-6">
               <div className="text-center space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto shadow-sm border border-rose-100">
+                <div className="w-14 h-14 rounded-2xl bg-[#B8748C]/15 text-[#B8748C] flex items-center justify-center mx-auto shadow-sm border border-[#B8748C]/30">
                   <AlertTriangle className="w-7 h-7" />
                 </div>
                 <h2 className={`text-xl font-bold tracking-tight ${darkContrast ? 'text-white' : 'text-slate-900'}`}>
@@ -221,11 +221,11 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
               {/* Resend Verification Form */}
               <div
                 className={`p-5 rounded-xl border space-y-3 ${
-                  darkContrast ? 'bg-zinc-900/60 border-white/10' : 'bg-slate-50 border-slate-200'
+                  darkContrast ? 'bg-zinc-900/60 border-white/10' : 'bg-slate-50 border-[#ECE6DE]'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-blue-600" />
+                  <Mail className="w-4 h-4 text-[#7FA080]" />
                   <span className={`text-xs font-bold uppercase tracking-wider ${darkContrast ? 'text-zinc-200' : 'text-slate-700'}`}>
                     Request a New Verification Link
                   </span>
@@ -238,8 +238,8 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
                   <div
                     className={`p-3 rounded-lg text-xs font-medium border ${
                       resendMsg.type === 'success'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                        : 'bg-rose-50 text-rose-800 border-rose-200'
+                        ? 'bg-[#7FA080]/15 text-emerald-800 border-[#7FA080]/30'
+                        : 'bg-[#B8748C]/15 text-[#8C465D] border-[#B8748C]/30'
                     }`}
                   >
                     {resendMsg.text}
@@ -253,10 +253,10 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
                     onChange={(e) => setResendEmail(e.target.value)}
                     placeholder="name@example.com"
                     required
-                    className={`w-full px-3.5 py-2 text-xs sm:text-sm rounded-lg border focus:outline-none focus:ring-1 focus:ring-[#0f2952] ${
+                    className={`w-full px-3.5 py-2 text-xs sm:text-sm rounded-lg border focus:outline-none focus:ring-1 focus:ring-[#7CA7A6] ${
                       darkContrast
                         ? 'bg-black border-white/20 text-white placeholder-zinc-500'
-                        : 'bg-white border-slate-300 text-slate-800'
+                        : 'bg-white border-[#ECE6DE] text-slate-800'
                     }`}
                   />
                   <div className="flex items-center gap-2">
@@ -266,7 +266,7 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
                       className={`flex-1 py-2 px-4 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 ${
                         darkContrast
                           ? 'bg-white text-black hover:bg-zinc-200 font-bold'
-                          : 'bg-[#0f2952] hover:bg-[#1a3a6b] text-white'
+                          : 'bg-[#7CA7A6] hover:bg-[#689493] text-white'
                       }`}
                     >
                       {resendLoading ? (
@@ -289,7 +289,7 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = ({
                       className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all ${
                         darkContrast
                           ? 'border-white/30 text-white hover:bg-zinc-800'
-                          : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-100'
+                          : 'border-[#ECE6DE] text-slate-700 bg-white hover:bg-slate-100'
                       }`}
                     >
                       Sign In

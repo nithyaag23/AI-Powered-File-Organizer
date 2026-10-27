@@ -110,7 +110,7 @@ export const BatchOrganizerPage: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-8 select-none py-4">
       {/* Page Title & Mission */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f2952] tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#7CA7A6] tracking-tight">
           Batch File Organizer & Deduplicator
         </h1>
         <p className="text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
@@ -121,8 +121,8 @@ export const BatchOrganizerPage: React.FC = () => {
       </div>
 
       {error && (
-        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+        <div className="p-3.5 rounded-xl bg-[#B8748C]/15 border border-[#B8748C]/30 text-[#8C465D] text-xs flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-[#B8748C] shrink-0 mt-0.5" />
           <span className="font-medium">{error}</span>
         </div>
       )}
@@ -134,7 +134,7 @@ export const BatchOrganizerPage: React.FC = () => {
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            className="border-2 border-dashed border-slate-300 hover:border-[#0f2952] rounded-2xl p-8 sm:p-12 text-center bg-white transition-all cursor-pointer shadow-sm group"
+            className="border-2 border-dashed border-[#DFD7CC] hover:border-[#7CA7A6] rounded-2xl p-8 sm:p-12 text-center bg-white transition-all cursor-pointer shadow-sm group"
             onClick={() => fileInputRef.current?.click()}
           >
             <input
@@ -144,14 +144,14 @@ export const BatchOrganizerPage: React.FC = () => {
               multiple
               className="hidden"
             />
-            <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 text-[#0f2952] mx-auto flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+            <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-[#ECE6DE] text-[#7CA7A6] mx-auto flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
               <UploadCloud className="w-7 h-7" />
             </div>
             <div className="text-base font-bold text-slate-800">
               Drag and drop your batch of N files here
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              or <span className="text-[#0f2952] font-semibold underline">browse files from your computer</span>
+              or <span className="text-[#7CA7A6] font-semibold underline">browse files from your computer</span>
             </p>
             <p className="text-[11px] text-slate-400 mt-3">
               Supports documents, PDF, images, audio, video, code, archives & any mixed file types
@@ -160,7 +160,7 @@ export const BatchOrganizerPage: React.FC = () => {
 
           {/* Staged File List */}
           {selectedFiles.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div className="bg-white rounded-2xl border border-[#ECE6DE] p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-sm text-slate-800">
@@ -173,7 +173,7 @@ export const BatchOrganizerPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={clearAllSelected}
-                  className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                  className="text-xs text-[#B8748C] hover:text-rose-700 font-medium flex items-center gap-1"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Clear List</span>
@@ -199,7 +199,7 @@ export const BatchOrganizerPage: React.FC = () => {
                           e.stopPropagation();
                           removeSelectedFile(idx);
                         }}
-                        className="text-slate-400 hover:text-rose-600 p-0.5"
+                        className="text-slate-400 hover:text-[#B8748C] p-0.5"
                       >
                         ✕
                       </button>
@@ -215,7 +215,7 @@ export const BatchOrganizerPage: React.FC = () => {
                     type="checkbox"
                     checked={removeDuplicates}
                     onChange={(e) => setRemoveDuplicates(e.target.checked)}
-                    className="rounded text-[#0f2952] focus:ring-[#0f2952]"
+                    className="rounded text-[#7CA7A6] focus:ring-[#7CA7A6]"
                   />
                   <span>Automatically purge exact duplicate files (SHA-256)</span>
                 </label>
@@ -226,7 +226,7 @@ export const BatchOrganizerPage: React.FC = () => {
                 type="button"
                 onClick={handleProcess}
                 disabled={processing}
-                className="w-full py-3 px-4 rounded-xl bg-[#0f2952] hover:bg-[#1a3a6b] text-white font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 px-4 rounded-xl bg-[#7CA7A6] hover:bg-[#689493] text-white font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {processing ? (
                   <span>Analyzing, Deduplicating & Packaging...</span>
@@ -246,29 +246,29 @@ export const BatchOrganizerPage: React.FC = () => {
           
           {/* Summary Metric Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-sm">
-              <div className="text-2xl font-black text-[#0f2952]">{result.total_files}</div>
+            <div className="p-4 rounded-xl bg-white border border-[#ECE6DE] text-center shadow-sm">
+              <div className="text-2xl font-black text-[#7CA7A6]">{result.total_files}</div>
               <div className="text-xs font-semibold text-slate-500 mt-0.5">Input Files</div>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-sm">
-              <div className="text-2xl font-black text-emerald-600">{result.unique_files_count}</div>
+            <div className="p-4 rounded-xl bg-white border border-[#ECE6DE] text-center shadow-sm">
+              <div className="text-2xl font-black text-[#7FA080]">{result.unique_files_count}</div>
               <div className="text-xs font-semibold text-slate-500 mt-0.5">Unique Files Kept</div>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-sm">
-              <div className="text-2xl font-black text-rose-600">{result.duplicates_removed_count}</div>
+            <div className="p-4 rounded-xl bg-white border border-[#ECE6DE] text-center shadow-sm">
+              <div className="text-2xl font-black text-[#B8748C]">{result.duplicates_removed_count}</div>
               <div className="text-xs font-semibold text-slate-500 mt-0.5">Duplicates Purged</div>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-sm">
-              <div className="text-2xl font-black text-indigo-600">{formatSize(result.wasted_bytes_saved)}</div>
+            <div className="p-4 rounded-xl bg-white border border-[#ECE6DE] text-center shadow-sm">
+              <div className="text-2xl font-black text-[#C49A70]">{formatSize(result.wasted_bytes_saved)}</div>
               <div className="text-xs font-semibold text-slate-500 mt-0.5">Disk Space Saved</div>
             </div>
           </div>
 
           {/* Primary Action: Download Single Output ZIP File */}
-          <div className="p-6 rounded-2xl bg-[#0f2952] text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-6 rounded-2xl bg-[#7CA7A6] text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold">Your Organized Files Are Ready</h3>
               <p className="text-xs text-slate-200 mt-1">
@@ -280,7 +280,7 @@ export const BatchOrganizerPage: React.FC = () => {
               <a
                 href={getBatchDownloadUrl(result.session_id)}
                 download="Organized_Files.zip"
-                className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md transition-all flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl bg-[#7FA080] hover:bg-[#6E936F] text-white font-bold text-sm shadow-md transition-all flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Organized ZIP</span>
@@ -297,10 +297,10 @@ export const BatchOrganizerPage: React.FC = () => {
           </div>
 
           {/* Organized Subfolder Structure Preview */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
+          <div className="bg-white rounded-2xl border border-[#ECE6DE] p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                <FolderTree className="w-4 h-4 text-[#0f2952]" />
+                <FolderTree className="w-4 h-4 text-[#7CA7A6]" />
                 <span>Organized Folder Tree Preview</span>
               </h4>
               <span className="text-xs text-slate-500 font-medium">
@@ -312,14 +312,14 @@ export const BatchOrganizerPage: React.FC = () => {
               {result.folders.map((folder) => {
                 const isOpen = openFolders[folder.subfolder] ?? true;
                 return (
-                  <div key={folder.subfolder} className="border border-slate-200 rounded-xl overflow-hidden">
+                  <div key={folder.subfolder} className="border border-[#ECE6DE] rounded-xl overflow-hidden">
                     <button
                       onClick={() => toggleFolder(folder.subfolder)}
                       className="w-full p-3 bg-slate-50 hover:bg-slate-100/70 flex items-center justify-between text-left transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         {isOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                        <span className="font-bold text-xs text-[#0f2952]">📁 {folder.subfolder}</span>
+                        <span className="font-bold text-xs text-[#7CA7A6]">📁 {folder.subfolder}</span>
                         <span className="text-[11px] text-slate-500">({folder.count} files)</span>
                       </div>
                       <span className="text-xs text-slate-400 font-mono">{formatSize(folder.total_size)}</span>
@@ -346,7 +346,7 @@ export const BatchOrganizerPage: React.FC = () => {
 
           {/* Duplicate Purge Report (Proof of deduplication) */}
           {result.duplicate_files.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
+            <div className="bg-white rounded-2xl border border-[#ECE6DE] p-5 shadow-sm space-y-3">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <h4 className="font-bold text-sm text-rose-700 flex items-center gap-2">
                   <Copy className="w-4 h-4" />
@@ -361,7 +361,7 @@ export const BatchOrganizerPage: React.FC = () => {
                 {result.duplicate_files.map((dup, dIdx) => (
                   <div
                     key={dIdx}
-                    className="p-2.5 rounded-lg bg-rose-50/50 border border-rose-100 flex items-center justify-between text-xs text-rose-900"
+                    className="p-2.5 rounded-lg bg-[#B8748C]/15/50 border border-rose-100 flex items-center justify-between text-xs text-rose-900"
                   >
                     <div className="truncate">
                       <span className="font-semibold line-through text-slate-500 mr-2">{dup.original_name}</span>
@@ -378,7 +378,7 @@ export const BatchOrganizerPage: React.FC = () => {
           <div className="text-center pt-2">
             <button
               onClick={handleReset}
-              className="px-6 py-2.5 rounded-xl border border-slate-300 hover:border-slate-400 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-2 shadow-sm bg-white"
+              className="px-6 py-2.5 rounded-xl border border-[#DFD7CC] hover:border-slate-400 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-2 shadow-sm bg-white"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Process Another Batch of N Files</span>

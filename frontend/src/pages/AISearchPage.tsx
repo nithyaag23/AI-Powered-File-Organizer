@@ -72,7 +72,7 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider mb-2">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#7FA080]/15 text-[#3F6241] border border-[#7FA080]/30 text-xs font-bold uppercase tracking-wider mb-2">
           <Sparkles className="w-3.5 h-3.5" />
           Neural Vector Search
         </div>
@@ -83,16 +83,16 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
       </div>
 
       {/* Search Input Box */}
-      <div className="card p-5 space-y-4 shadow-sm border-blue-100">
+      <div className="card p-5 space-y-4 shadow-sm border-[#ECE6DE]">
         <form onSubmit={handleFormSubmit} className="relative">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. Find documents discussing machine learning algorithms and arrays..."
-            className="w-full pl-11 pr-28 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+            className="w-full pl-11 pr-28 py-3.5 rounded-xl bg-slate-50 border border-[#ECE6DE] text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#7CA7A6]/20 focus:border-[#7CA7A6] font-medium"
           />
-          <Sparkles className="w-5 h-5 text-blue-600 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Sparkles className="w-5 h-5 text-[#7CA7A6] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <button
             type="submit"
             disabled={loading || !query.trim()}
@@ -116,7 +116,7 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
                 setQuery(prompt);
                 handleSearch(prompt);
               }}
-              className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 font-medium transition-colors"
+              className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#7CA7A6]/10 hover:text-[#406665] text-slate-600 font-medium transition-colors"
             >
               "{prompt}"
             </button>
@@ -125,9 +125,9 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
       </div>
 
       {/* AI Engine Status Banner */}
-      <div className="p-3.5 rounded-xl bg-slate-100/70 border border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
+      <div className="p-3.5 rounded-xl bg-slate-100/70 border border-[#ECE6DE]/80 flex items-center justify-between text-xs text-slate-600">
         <div className="flex items-center gap-2">
-          <Bot className="w-4 h-4 text-blue-600 shrink-0" />
+          <Bot className="w-4 h-4 text-[#7CA7A6] shrink-0" />
           <span>
             {searchMethod === 'ollama_chromadb'
               ? 'Query analyzed with Ollama neural embeddings + ChromaDB cosine distance.'
@@ -142,7 +142,7 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
       {/* Results Section */}
       {loading ? (
         <div className="flex flex-col items-center justify-center min-h-[250px] gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7CA7A6]"></div>
           <p className="text-xs text-slate-400 font-medium">Computing neural vector similarity across ChromaDB...</p>
         </div>
       ) : hasSearched && results.length === 0 ? (
@@ -168,7 +168,7 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
               <div key={item.id} className="card p-4 card-hover space-y-3">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-10 h-10 rounded-xl bg-[#7CA7A6]/10 text-[#7CA7A6] flex items-center justify-center shrink-0 mt-0.5">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
@@ -198,7 +198,7 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
                       <a
                         href={getDownloadUrl(item.id)}
                         download={item.original_name}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-[#7CA7A6] hover:bg-[#7CA7A6]/10"
                         title="Download"
                       >
                         <Download className="w-4 h-4" />

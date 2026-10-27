@@ -32,16 +32,16 @@ export const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
         className={`absolute top-16 right-6 md:right-12 z-50 w-72 rounded-2xl shadow-2xl border p-5 animate-in fade-in zoom-in-95 duration-150 transition-colors ${
           darkContrast
             ? 'bg-black text-white border-white/40 ring-1 ring-white/20'
-            : 'bg-white text-slate-800 border-slate-200'
+            : 'bg-[#FAF8F5] text-slate-800 border-[#ECE6DE]'
         }`}
       >
       {/* Header with proper Accessibility Icon */}
       <div className={`flex items-center justify-between pb-3 border-b ${
-        darkContrast ? 'border-white/20' : 'border-slate-100'
+        darkContrast ? 'border-white/20' : 'border-[#ECE6DE]'
       }`}>
         <div className="flex items-center gap-2 font-bold text-sm">
           <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-            darkContrast ? 'bg-white text-black' : 'bg-[#0f2952] text-white'
+            darkContrast ? 'bg-white text-black' : 'bg-[#7CA7A6] text-white'
           }`}>
             <Accessibility className="w-3.5 h-3.5" />
           </div>
@@ -52,7 +52,7 @@ export const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
           className={`p-1 rounded-lg transition-colors ${
             darkContrast
               ? 'text-white/70 hover:text-white hover:bg-white/10'
-              : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+              : 'text-slate-400 hover:text-slate-600 hover:bg-[#F4EFEA]'
           }`}
           aria-label="Close accessibility controls"
         >
@@ -84,11 +84,11 @@ export const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
                   className={`py-1.5 text-xs font-bold rounded-lg border transition-all ${
                     isActive
                       ? darkContrast
-                        ? 'bg-white text-black border-white shadow-sm ring-2 ring-white/50'
-                        : 'bg-[#0f2952] text-white border-[#0f2952] shadow-sm'
+                        ? 'bg-white text-black border-white shadow-xs ring-2 ring-white/50'
+                        : 'bg-[#7CA7A6] text-white border-[#7CA7A6] shadow-xs'
                       : darkContrast
                       ? 'bg-zinc-900 text-white border-zinc-700 hover:bg-zinc-800'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      : 'bg-white text-slate-700 border-[#ECE6DE] hover:bg-[#F4EFEA]'
                   }`}
                 >
                   {item.label}
@@ -100,20 +100,20 @@ export const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({
 
         {/* Dark Contrast Toggle */}
         <div className={`pt-2 border-t ${
-          darkContrast ? 'border-white/20' : 'border-slate-100'
+          darkContrast ? 'border-white/20' : 'border-[#ECE6DE]'
         }`}>
           <button
             type="button"
             onClick={() => setDarkContrast(!darkContrast)}
             className={`w-full py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
               darkContrast
-                ? 'bg-white text-black border-white shadow-sm hover:bg-slate-100'
-                : 'bg-[#0f2952] text-white border-[#0f2952] hover:bg-[#1a3a6b]'
+                ? 'bg-white text-black border-white shadow-xs hover:bg-zinc-200'
+                : 'bg-[#7CA7A6] hover:bg-[#689493] text-white border-[#7CA7A6]'
             }`}
           >
             {darkContrast ? (
               <>
-                <Sun className="w-4 h-4 text-amber-500" />
+                <Sun className="w-4 h-4 text-[#C49A70]" />
                 <span>Turn Dark Contrast OFF</span>
               </>
             ) : (
