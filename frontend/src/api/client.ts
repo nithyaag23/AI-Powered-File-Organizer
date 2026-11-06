@@ -51,6 +51,15 @@ function getAuthHeaders(): Record<string, string> {
   return {};
 }
 
+export async function checkBackendHealth(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/health`);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchStats(): Promise<DashboardStats> {
   const res = await authFetch(`${API_BASE}/stats`);
   if (!res.ok) throw new Error(`Failed to load stats: ${res.statusText}`);

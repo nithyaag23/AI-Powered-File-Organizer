@@ -9,6 +9,7 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertTriangle,
+  Shield,
 } from 'lucide-react';
 import { fetchSystemStatus, clearAllData } from '../api/client';
 import { SystemStatus } from '../types';
@@ -17,13 +18,14 @@ import { formatBytes } from '../utils/formatters';
 interface SettingsPageProps {
   isAdmin?: boolean;
   onRefreshStats: () => void;
+  onSignInAdmin?: () => void;
 }
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAdmin = false }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAdmin = false, onSignInAdmin }) => {
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
-  const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [msg, setMsg] = useState<{ type: 'success' | 'error' | 'auth'; text: string } | null>(null);
 
   const loadStatus = async () => {
     setLoading(true);
@@ -32,7 +34,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
       const data = await fetchSystemStatus();
       setStatus(data);
     } catch (err: any) {
-      setMsg({ type: 'error', text: err.message || 'Failed to connect to backend server.' });
+      const errorMsg = err.message || '';
+      if (errorMsg.includes('Unauthorized') || errorMsg.includes('401')) {
+        setMsg({
+          type: 'auth',
+          text: 'Administrator sign-in required. Please log in with an administrator account to view real-time system metrics and management controls.',
+        });
+      } else {
+        setMsg({ type: 'error', text: errorMsg || 'Failed to connect to backend server.' });
+      }
     } finally {
       setLoading(false);
     }
@@ -43,7 +53,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
   }, []);
 
   const handleClearAll = async () => {
-    if (!window.confirm('WARNING: Are you sure you want to permanently clear all uploaded files, SQLite records, and ChromaDB vector embeddings? This cannot be undone.')) {
+    if (!window.confirm('WARNING: Are you sure you want to permanently clear all uploaded files, database records, and semantic search indexes? This cannot be undone.')) {
       return;
     }
     setResetting(true);
@@ -63,9 +73,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System & AI Settings</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System & Service Status</h1>
           <p className="text-slate-500 text-sm mt-0.5">
-            Monitor API endpoints, local storage directories, vector database health, and Ollama configuration
+            Monitor core service status, neural vector index, storage vault, and local engine configuration
           </p>
         </div>
         <button onClick={loadStatus} className="btn-secondary">
@@ -75,13 +85,31 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
       </div>
 
       {msg && (
-        <div className={`p-4 rounded-xl border text-sm flex items-center gap-2 ${
+        <div className={`p-4 rounded-xl border text-sm flex items-center justify-between gap-3 ${
           msg.type === 'success'
             ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : msg.type === 'auth'
+            ? 'bg-amber-50 border-amber-200 text-amber-900'
             : 'bg-rose-50 border-rose-200 text-rose-800'
         }`}>
-          {msg.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-          <span>{msg.text}</span>
+          <div className="flex items-center gap-3">
+            {msg.type === 'success' ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            ) : msg.type === 'auth' ? (
+              <Shield className="w-5 h-5 text-amber-600 shrink-0" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+            )}
+            <span className="font-medium">{msg.text}</span>
+          </div>
+          {msg.type === 'auth' && onSignInAdmin && (
+            <button
+              onClick={onSignInAdmin}
+              className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shrink-0 transition-colors shadow-sm"
+            >
+              Sign In as Admin
+            </button>
+          )}
         </div>
       )}
 
@@ -91,7 +119,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
         </div>
       ) : (
         <div className="space-y-5">
-          {/* FastAPI Backend */}
+          {/* Core System Engine */}
           <div className="card p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -99,7 +127,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                   <Server className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">FastAPI Backend</h3>
+                  <h3 className="font-bold text-slate-900 text-sm">Core System Engine</h3>
                 </div>
               </div>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -109,8 +137,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
               <div>
-                <span className="text-slate-400 font-medium">Framework:</span>
-                <div className="font-bold text-slate-700 mt-0.5">Python + FastAPI</div>
+                <span className="text-slate-400 font-medium">System Service:</span>
+                <div className="font-bold text-slate-700 mt-0.5">Operational Service</div>
               </div>
               <div>
                 <span className="text-slate-400 font-medium">API Version:</span>
@@ -119,7 +147,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
             </div>
           </div>
 
-          {/* Ollama AI Embeddings */}
+          {/* AI Semantic Engine */}
           <div className="card p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -127,7 +155,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                   <Bot className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">Ollama AI Embeddings</h3>
+                  <h3 className="font-bold text-slate-900 text-sm">AI Semantic Engine</h3>
                 </div>
               </div>
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
@@ -136,28 +164,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                   : 'bg-amber-50 text-amber-700 border-amber-200'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${status?.ollama?.connected ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-                {status?.ollama?.connected ? 'Ollama Online' : 'Local Fallback'}
+                {status?.ollama?.connected ? 'High-Performance Engine' : 'Built-in Neural Model'}
               </span>
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Target Embedding Model:</span>
-                <span className="font-mono font-bold text-slate-800">{status?.ollama?.active_model || 'nomic-embed-text'}</span>
+                <span className="text-slate-500">Active Embedding Model:</span>
+                <span className="font-mono font-bold text-slate-800">
+                  {status?.ollama?.active_model || 'nomic-embed-text (Built-in)'}
+                </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Detected Installed Models:</span>
+                <span className="text-slate-500">Installed Models:</span>
                 <span className="font-mono text-slate-700">
                   {status?.ollama?.models && status.ollama.models.length > 0
                     ? status.ollama.models.join(', ')
-                    : 'None detected'}
+                    : 'Default Built-in'}
                 </span>
               </div>
-
             </div>
           </div>
 
-          {/* ChromaDB Vector Database */}
+          {/* Semantic Vector Index */}
           <div className="card p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -165,7 +194,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                   <Database className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">ChromaDB Vector Store</h3>
+                  <h3 className="font-bold text-slate-900 text-sm">Semantic Vector Index</h3>
                 </div>
               </div>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -176,26 +205,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
 
             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
               <div>
-                <span className="text-slate-400 font-medium">Vector Index Collection:</span>
-                <div className="font-bold text-slate-800 mt-0.5">file_embeddings (Cosine space)</div>
+                <span className="text-slate-400 font-medium">Index Database:</span>
+                <div className="font-bold text-slate-800 mt-0.5">Document Semantic Vectors</div>
               </div>
               <div>
-                <span className="text-slate-400 font-medium">Total Vector Documents:</span>
+                <span className="text-slate-400 font-medium">Indexed Files:</span>
                 <div className="font-bold text-indigo-600 mt-0.5">
-                  {status?.chromadb?.collection_count ?? 0} vectors
+                  {status?.chromadb?.collection_count ?? 0} documents
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Local Storage Directory */}
+          {/* Local File Vault */}
           <div className="card p-5 space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
                 <HardDrive className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-sm">Local Storage Directory</h3>
+                <h3 className="font-bold text-slate-900 text-sm">Local File Vault</h3>
               </div>
             </div>
 
@@ -219,16 +248,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                 Data Reset & Clean
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Permanently wipes all uploaded files from disk, resets SQLite file registry, and empties ChromaDB vectors.
+                Permanently wipes all uploaded files from disk, resets database file registry, and empties semantic vector indexes.
               </p>
             </div>
-            {isAdmin && (<button
-              onClick={handleClearAll}
-              disabled={resetting}
-              className="btn-danger"
-            >
-              {resetting ? 'Resetting...' : 'Reset All Files & Database'}
-            </button>)}
+            {isAdmin && (
+              <button
+                onClick={handleClearAll}
+                disabled={resetting}
+                className="btn-danger"
+              >
+                {resetting ? 'Resetting...' : 'Reset All Files & Database'}
+              </button>
+            )}
           </div>
         </div>
       )}

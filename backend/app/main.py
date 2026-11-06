@@ -49,6 +49,14 @@ app.include_router(search.router)
 app.include_router(stats.router)
 app.include_router(settings.router)
 
+@app.get("/api/health")
+def api_health():
+    return {
+        "status": "healthy",
+        "app": "AI-Powered File Organizer",
+        "version": "1.0.0"
+    }
+
 @app.get("/")
 def root():
     return {

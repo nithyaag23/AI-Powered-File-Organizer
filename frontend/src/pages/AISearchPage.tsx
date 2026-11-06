@@ -78,7 +78,7 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
         </div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">AI Semantic Search</h1>
         <p className="text-slate-500 text-sm mt-0.5">
-          Ask for files using everyday human language. Understands content meaning via Ollama embeddings and ChromaDB vector space.
+          Ask for files using everyday human language. Understands document content and meaning using advanced semantic vector analysis.
         </p>
       </div>
 
@@ -130,12 +130,12 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
           <Bot className="w-4 h-4 text-blue-600 shrink-0" />
           <span>
             {searchMethod === 'ollama_chromadb'
-              ? 'Query analyzed with Ollama neural embeddings + ChromaDB cosine distance.'
-              : 'Indexed via ChromaDB vector database. Full semantic match enabled.'}
+              ? 'Query analyzed with neural semantic embeddings and vector similarity.'
+              : 'Indexed via semantic vector engine. Full semantic matching active.'}
           </span>
         </div>
         <span className="font-semibold text-slate-700">
-          {ollamaOnline ? 'Ollama: Connected' : 'Local Vector Engine: Active'}
+          {ollamaOnline ? 'AI Semantic Engine: Enhanced' : 'AI Semantic Engine: Active'}
         </span>
       </div>
 
@@ -143,7 +143,7 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
       {loading ? (
         <div className="flex flex-col items-center justify-center min-h-[250px] gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="text-xs text-slate-400 font-medium">Computing neural vector similarity across ChromaDB...</p>
+          <p className="text-xs text-slate-400 font-medium">Computing semantic vector similarity across documents...</p>
         </div>
       ) : hasSearched && results.length === 0 ? (
         <div className="card p-12 text-center space-y-2">

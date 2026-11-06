@@ -11,7 +11,7 @@ import { LandingPage } from './pages/LandingPage';
 import { BatchOrganizerPage } from './pages/BatchOrganizerPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { AuthModalType } from './components/auth/AuthModals';
-import { fetchStats, fetchSystemStatus, deleteFile } from './api/client';
+import { fetchStats, fetchSystemStatus, deleteFile, checkBackendHealth } from './api/client';
 import { DashboardStats, SystemStatus, User } from './types';
 import {
   saveSession,
@@ -203,7 +203,18 @@ export default function App() {
     } catch {}
   }, [darkContrast]);
 
+  const checkHealth = async () => {
+    const isOnline = await checkBackendHealth();
+    setBackendOnline(isOnline);
+    return isOnline;
+  };
+
   const loadData = async () => {
+    const isOnline = await checkHealth();
+    if (!isOnline) {
+      setLoading(false);
+      return;
+    }
     // Data endpoints require sign-in; nothing to load for a signed-out visitor
     if (!getActiveSession()) {
       setLoading(false);
@@ -216,17 +227,21 @@ export default function App() {
       ]);
       setStats(statsData);
       setSystemStatus(statusData);
-      setBackendOnline(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : '';
       // 401 means the session ended, not that the backend is down
       if (!message.includes('Unauthorized')) {
-        console.error('Failed to connect to backend', err);
+        console.error('Failed to load stats', err);
         setBackendOnline(false);
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenAdminLogin = () => {
+    navigateTo('landing', 'batch-organizer');
+    setInitialAuthModal('admin-login');
   };
 
   useEffect(() => {
@@ -499,7 +514,7 @@ export default function App() {
         )}
 
         {currentPage === 'settings' && (
-          <SettingsPage onRefreshStats={loadData} isAdmin={currentUser?.role === 'admin'} />
+          <SettingsPage onRefreshStats={loadData} isAdmin={currentUser?.role === 'admin'} onSignInAdmin={handleOpenAdminLogin} />
         )}
       </main>
     </div>
