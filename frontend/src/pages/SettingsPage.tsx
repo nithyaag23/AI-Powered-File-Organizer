@@ -9,7 +9,6 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertTriangle,
-  Terminal
 } from 'lucide-react';
 import { fetchSystemStatus, clearAllData } from '../api/client';
 import { SystemStatus } from '../types';
@@ -129,7 +128,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">Ollama AI Embeddings</h3>
-                  <p className="text-xs text-slate-500">{status?.ollama?.base_url || 'http://127.0.0.1:11434'}</p>
                 </div>
               </div>
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
@@ -156,19 +154,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                 </span>
               </div>
 
-              {!status?.ollama?.connected && (
-                <div className="pt-2 border-t border-slate-200/60 text-slate-600 space-y-1.5">
-                  <p className="font-medium text-slate-700 flex items-center gap-1.5">
-                    <Terminal className="w-3.5 h-3.5 text-blue-600" />
-                    How to enable local Ollama embeddings:
-                  </p>
-                  <p className="text-slate-500">1. Download and start Ollama from <a href="https://ollama.com" target="_blank" rel="noreferrer" className="text-blue-600 underline">ollama.com</a>.</p>
-                  <p className="text-slate-500">2. Run in terminal: <code className="bg-slate-200 px-1.5 py-0.5 rounded font-mono text-slate-800">ollama pull nomic-embed-text</code></p>
-                  <p className="text-xs text-blue-600 font-semibold mt-1">
-                    Note: Semantic search works right now using ChromaDB's built-in text vector indexing!
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -181,7 +166,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">ChromaDB Vector Store</h3>
-                  <p className="text-xs text-slate-500 truncate max-w-sm">{status?.chromadb?.path}</p>
                 </div>
               </div>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -212,7 +196,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 text-sm">Local Storage Directory</h3>
-                <p className="text-xs text-slate-500 truncate max-w-sm">{status?.storage?.upload_dir}</p>
               </div>
             </div>
 

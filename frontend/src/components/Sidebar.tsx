@@ -9,7 +9,6 @@ import {
   Sparkles,
   Settings,
   HardDrive,
-  Cpu,
   LogOut,
   Shield,
   User as UserIcon,
@@ -278,48 +277,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* System Status Summary Widget */}
-      <div
-        className={`p-4 m-4 mt-1 rounded-2xl border space-y-2 text-xs transition-colors ${
-          darkContrast
-            ? 'bg-zinc-950 border-white/20 text-zinc-300'
-            : 'bg-slate-50 border-slate-200/80 text-slate-700'
-        }`}
-      >
-        <div className="flex items-center justify-between font-semibold">
-          <span className="flex items-center gap-1.5">
-            <Cpu className="w-3.5 h-3.5 text-slate-400" />
-            System Status
-          </span>
-          <span className={darkContrast ? 'text-zinc-400' : 'text-slate-500'}>{totalFiles} files</span>
-        </div>
-
-        <div
-          className={`space-y-1.5 pt-1 border-t ${
-            darkContrast ? 'border-white/10' : 'border-slate-200/60'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className={darkContrast ? 'text-zinc-400' : 'text-slate-500'}>FastAPI Backend</span>
-            <span className="flex items-center gap-1 font-medium">
-              <span className={`w-2 h-2 rounded-full ${backendOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-              <span className={backendOnline ? 'text-emerald-500 font-semibold' : 'text-rose-500 font-semibold'}>
-                {backendOnline ? 'Online' : 'Offline'}
-              </span>
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className={darkContrast ? 'text-zinc-400' : 'text-slate-500'}>Ollama AI</span>
-            <span className="flex items-center gap-1 font-medium">
-              <span className={`w-2 h-2 rounded-full ${ollamaOnline ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-              <span className={ollamaOnline ? 'text-emerald-500 font-semibold' : 'text-amber-500 font-semibold'}>
-                {ollamaOnline ? 'Ready' : 'Local Standby'}
-              </span>
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Accessibility popup when opened from sidebar */}
       {setTextSize && setDarkContrast && (
