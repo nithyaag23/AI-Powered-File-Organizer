@@ -1,7 +1,10 @@
 import math
 import hashlib
+import logging
 from typing import List, Dict, Any, Optional
 from ..config import CHROMA_DIR
+
+logger = logging.getLogger(__name__)
 
 COLLECTION_PREFIX = "file_embeddings_"
 
@@ -90,7 +93,7 @@ class ChromaService:
                 metadatas=[clean_meta]
             )
         except Exception as e:
-            print("Chroma upsert error:", e)
+            logger.warning("Chroma upsert error: %s", e)
 
     def search_semantic(
         self,
@@ -128,7 +131,7 @@ class ChromaService:
                     include=["metadatas", "documents", "distances"]
                 )
             except Exception as e:
-                print("Chroma search error:", e)
+                logger.warning("Chroma search error: %s", e)
                 continue
 
             if not results or not results.get("ids"):

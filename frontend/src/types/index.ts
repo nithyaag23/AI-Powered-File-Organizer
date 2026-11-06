@@ -59,7 +59,6 @@ export interface SystemStatus {
   backend: {
     status: string;
     version: string;
-    port: number;
     host: string;
   };
   storage: {
