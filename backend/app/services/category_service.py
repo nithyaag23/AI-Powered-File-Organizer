@@ -1,6 +1,10 @@
+import os
 import re
+import math
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Tuple
+
+from .ollama_service import ollama_service
 
 CATEGORY_EXTENSIONS = {
     "Documents": {
@@ -30,27 +34,12 @@ CATEGORY_EXTENSIONS = {
 TOPIC_RULES = [
     # Academics
     (r"\bpsp\b|problem\s*solving", "Academics/Problem Solving", "Problem Solving", ["PSP", "Problem Solving", "Academics"]),
-    (r"\bcn\b|computer\s*networks?|\btcp\b|osi\s*model|subnet|routing", "Academics/Computer Networks", "Computer Networks", ["Networks", "CN", "Academics"]),
-    (r"machine\s*learning|\bml\b|neural|deep\s*learning|regression", "Academics/Machine Learning", "Machine Learning", ["ML", "AI", "Academics"]),
-    (r"software\s*engineering|\buml\b|sdlc|use\s*case", "Academics/Software Engineering", "Software Engineering", ["SE", "UML", "Academics"]),
-    (r"compiler|lexical|parsing", "Academics/Compiler Design", "Compiler Design", ["Compilers", "Academics"]),
-    (r"digital\s*logic|flip\s*flop|karnaugh|boolean", "Academics/Digital Logic", "Digital Logic", ["Digital Logic", "Academics"]),
-    (r"lab\s*manual|lab\s*record|practical\s*file", "Academics/Lab Work", "Lab Work", ["Lab", "Practical", "Academics"]),
-    (r"project\s*report|synopsis|mini\s*project", "Academics/Project Reports", "Project Reports", ["Project", "Report", "Academics"]),
     (r"phy\d*|physics|viva|lab\s*viva|optics|spectrometer|galvanometer", "Academics/Physics", "Physics Coursework", ["Physics", "Lab Viva", "Academics"]),
     (r"dsa|algorithm|data\s*struct|array|tree|graph|leetcode|stack|queue", "Academics/Data Structures", "Data Structures & Algorithms", ["DSA", "Algorithms", "Computer Science"]),
     (r"dbms|sql|database|normalization|relational|mongodb", "Academics/Databases", "Database Management", ["DBMS", "SQL", "Databases"]),
     (r"operating\s*system|\bos\b|kernel|process\s*schedul|deadlock|semaphore", "Academics/Operating Systems", "Operating Systems", ["OS", "Kernel", "Academics"]),
     (r"math|calculus|algebra|differential|matrix|statistics|probability", "Academics/Mathematics", "Mathematics", ["Math", "Calculus", "Academics"]),
     (r"chemistry|chemical|organic|titration|reaction", "Academics/Chemistry", "Chemistry", ["Chemistry", "Academics"]),
-    (r"cyber\s*security|ciphers?|information\s*security|cryptanalysis|\bcia\s*triad\b|penetration\s*testing|\brsa\b", "Academics/Cybersecurity", "Cybersecurity & Cryptography", ["Cybersecurity", "Security", "Academics"]),
-    (r"computer\s*organization|computer\s*architecture|\bcoa\b|\bmips\b|instruction\s*set|\brisc\b|\bcisc\b", "Academics/Computer Architecture", "Computer Organization & Architecture", ["COA", "Architecture", "Academics"]),
-    (r"automata|\btoc\b|turing\s*machine|context\s*free\s*grammar|\bcfg\b|\bpda\b|\bdfa\b|\bnfa\b", "Academics/Theory of Computation", "Theory of Computation", ["TOC", "Automata", "Academics"]),
-    (r"cloud\s*computing|\baws\b|virtualization|\bazure\b|\bgcp\b|serverless|distributed\s*systems?", "Academics/Cloud Computing", "Cloud Computing & Distributed Systems", ["Cloud", "Distributed Systems", "Academics"]),
-    (r"microprocessor|microcontroller|\b8086\b|\b8085\b|arm\s*cortex|embedded\s*systems?|\barduino\b|raspberry\s*pi", "Academics/Microprocessors", "Microprocessors & Embedded Systems", ["Microprocessors", "Embedded", "Academics"]),
-    (r"internet\s*of\s*things|\biot\b|sensor\s*networks?|\brfid\b|\bactuators?\b", "Academics/Internet of Things", "Internet of Things", ["IoT", "Sensors", "Academics"]),
-    (r"\bpyq\b|\bpyqs\b|question\s*paper|sample\s*paper|model\s*paper|mid\s*sem|end\s*sem", "Academics/Question Papers", "Question Papers & PYQs", ["PYQ", "Question Paper", "Academics"]),
-    (r"hall\s*ticket|admit\s*card|student\s*id|bonafide|grade\s*card|marksheet|transcripts?", "Academics/Administrative", "Academic Credentials & Admin", ["Admin", "Admit Card", "Academics"]),
     # Hackathons & College Events
     (r"hackloop|hackathon|hacktoberfest|floss\s*fest|finite\s*loop|open\s*source\s*ai|problem\s*statement|scrum", "Events/Hackathons", "Hackathon & Tech Events", ["Hackathon", "Open Source", "Finite Loop"]),
     (r"club|brochure|invitation|fest|workshop|webinar|symposium", "Events/Clubs", "Club & Event Materials", ["Events", "Brochure", "Club"]),
@@ -65,7 +54,6 @@ TOPIC_RULES = [
     (r"invoice|receipt|bill|statement|tax|gst|salary|payslip|budget|expense", "Finance/Invoices", "Invoices & Receipts", ["Finance", "Invoice", "Payments"]),
 
     # Coding & Development
-    (r"\bjava\b|\bc\+\+|\bc\s*programming|\bcpp\b", "Development/Languages", "Programming Languages", ["Java", "C", "Code"]),
     (r"\.py$|python|fastapi|django|flask|pandas|numpy", "Development/Python", "Python Code & Docs", ["Python", "Development", "Code"]),
     (r"\.tsx?$|\.jsx?$|react|javascript|typescript|frontend|tailwind|vite|nextjs", "Development/Web", "Web Development", ["React", "Web Dev", "Code"]),
     (r"github|git\b|readme|api\s*spec|backend|docker|kubernetes", "Development/Projects", "Project Repositories", ["Git", "Projects", "Code"]),
@@ -74,6 +62,81 @@ TOPIC_RULES = [
     (r"removebg|preview|design|mockup|wireframe|banner|poster|flyer|logo", "Media/Designs", "Design & Graphic Assets", ["Design", "Graphics", "Assets"]),
     (r"screenshot|screen\s*shot|capture", "Media/Screenshots", "Screenshots", ["Screenshots", "Media"]),
 ]
+
+# Topics the AI step can pick from when no keyword rule matches.
+# Each description is embedded once and compared with the file's text.
+SEMANTIC_TOPICS = [
+    ("Academics/Physics", "Physics Coursework", ["Physics", "Academics"],
+     "Physics: mechanics, optics, waves, electricity, magnetism, lab experiments and viva questions"),
+    ("Academics/Problem Solving", "Problem Solving", ["PSP", "Problem Solving", "Academics"],
+     "Problem solving and aptitude practice: puzzles, logical reasoning, quantitative questions"),
+    ("Academics/Data Structures", "Data Structures & Algorithms", ["DSA", "Algorithms", "Computer Science"],
+     "Data structures and algorithms: arrays, linked lists, trees, graphs, sorting and time complexity"),
+    ("Academics/Databases", "Database Management", ["DBMS", "SQL", "Databases"],
+     "Databases: SQL queries, relational schema, normalization, transactions and keys"),
+    ("Academics/Operating Systems", "Operating Systems", ["OS", "Kernel", "Academics"],
+     "Operating systems: processes, CPU scheduling, memory management, deadlock and file systems"),
+    ("Academics/Computer Networks", "Computer Networks", ["Networks", "CN", "Academics"],
+     "Computer networks: TCP/IP, routing, subnetting, network protocols and the OSI model"),
+    ("Academics/Machine Learning", "Machine Learning", ["ML", "AI", "Academics"],
+     "Machine learning and AI: neural networks, regression, classification, training and evaluating models"),
+    ("Academics/Mathematics", "Mathematics", ["Math", "Academics"],
+     "Mathematics: calculus, linear algebra, probability, statistics and equations"),
+    ("Career/Resumes", "Resume & Applications", ["Career", "Resume", "Job Search"],
+     "Resume, cover letter, job application, internship and work experience"),
+    ("Finance/Invoices", "Invoices & Receipts", ["Finance", "Invoice", "Payments"],
+     "Invoices, receipts, bills, payments, taxes and expense claims"),
+    ("Events/Hackathons", "Hackathon & Tech Events", ["Hackathon", "Open Source"],
+     "Hackathon or tech event: problem statement, project submission, team and judging"),
+]
+
+_topic_vectors: Optional[List[Tuple[Tuple[str, str, List[str], str], List[float]]]] = None
+
+
+def _semantic_min_score() -> float:
+    try:
+        return float(os.getenv("SEMANTIC_TOPIC_MIN_SCORE", "0.6"))
+    except ValueError:
+        return 0.6
+
+
+def _cosine(a: List[float], b: List[float]) -> float:
+    dot = sum(x * y for x, y in zip(a, b))
+    na = math.sqrt(sum(x * x for x in a))
+    nb = math.sqrt(sum(y * y for y in b))
+    return dot / (na * nb) if na and nb else 0.0
+
+
+def _get_topic_vectors():
+    """Embed every topic description once. Returns None while Ollama is unavailable."""
+    global _topic_vectors
+    if _topic_vectors is None:
+        vectors = []
+        for entry in SEMANTIC_TOPICS:
+            vec = ollama_service.generate_embedding(entry[3])
+            if not vec:
+                return None  # Ollama not reachable: try again on the next file
+            vectors.append((entry, vec))
+        _topic_vectors = vectors
+    return _topic_vectors
+
+
+def semantic_topic(text: str) -> Optional[Tuple[Tuple[str, str, List[str], str], float]]:
+    """Return the closest topic by meaning, or None if Ollama is off or nothing is close enough."""
+    if not text or not text.strip():
+        return None
+    topic_vectors = _get_topic_vectors()
+    if not topic_vectors:
+        return None
+    query = ollama_service.generate_embedding(text[:2000])
+    if not query:
+        return None
+    best_entry, best_vec = max(topic_vectors, key=lambda item: _cosine(query, item[1]))
+    score = _cosine(query, best_vec)
+    if score < _semantic_min_score():
+        return None
+    return best_entry, score
+
 
 def clean_filename(original_name: str) -> str:
     """Strip ugly artifacts from filenames like -removebg-preview, (1), duplicate extensions."""
@@ -133,6 +196,16 @@ def analyze_file_content(original_name: str, mime_type: str = "", extracted_text
             tags = rule_tags
             confidence = 0.95
             break
+
+    # No keyword matched: ask the embedding model which topic the content is closest to.
+    if confidence == 0.50 and extracted_text and extracted_text.strip():
+        hit = semantic_topic(f"{original_name}\n{extracted_text}")
+        if hit:
+            (target_subfolder, target_topic, rule_tags, _), score = hit
+            subfolder = target_subfolder
+            topic = target_topic
+            tags = rule_tags
+            confidence = round(score, 2)
 
     # If no rule matched, refine based on category
     if confidence == 0.50:
