@@ -8,9 +8,10 @@ import { PageId } from '../components/Sidebar';
 interface UploadPageProps {
   onUploadSuccess: () => void;
   onNavigate: (page: PageId) => void;
+  onRequireLogin?: () => void;
 }
 
-export const UploadPage: React.FC<UploadPageProps> = ({ onUploadSuccess, onNavigate }) => {
+export const UploadPage: React.FC<UploadPageProps> = ({ onUploadSuccess, onNavigate, onRequireLogin }) => {
   const [dragOver, setDragOver] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -51,7 +52,12 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onUploadSuccess, onNavig
       setSelectedFiles([]);
       onUploadSuccess();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to upload files to backend.');
+      const msg = err.message || 'Failed to upload files to backend.';
+      if (msg.includes('Unauthorized') || msg.includes('401') || msg.includes('Authentication required') || msg.includes('expired')) {
+        setErrorMsg('Your login session has expired. Please sign in again to upload and categorize files.');
+      } else {
+        setErrorMsg(msg);
+      }
     } finally {
       setUploading(false);
     }
@@ -69,9 +75,20 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onUploadSuccess, onNavig
       </div>
 
       {errorMsg && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 shrink-0" />
-          <span>{errorMsg}</span>
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+            <span className="font-medium">{errorMsg}</span>
+          </div>
+          {onRequireLogin && (errorMsg.includes('session has expired') || errorMsg.includes('Unauthorized')) && (
+            <button
+              type="button"
+              onClick={onRequireLogin}
+              className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shrink-0 transition-colors shadow-sm"
+            >
+              Sign In Again
+            </button>
+          )}
         </div>
       )}
 

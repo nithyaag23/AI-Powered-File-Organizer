@@ -1,17 +1,30 @@
 import { User } from '../types';
 
 // 15 Minutes inactivity timeout period
-export const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
+// 24 Hours inactivity timeout period
+export const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 
 const USER_KEY = 'file_organizer_user';
+const TOKEN_KEY = 'file_organizer_token';
 const ACTIVITY_KEY = 'file_organizer_last_active';
 
-export function saveSession(user: User): void {
+export function saveSession(user: User, token?: string): void {
   try {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     localStorage.setItem(ACTIVITY_KEY, Date.now().toString());
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    }
   } catch (e) {
     console.error('Failed to save session', e);
+  }
+}
+
+export function getSessionToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
   }
 }
 
@@ -59,6 +72,7 @@ export function clearSession(): void {
   try {
     hadSession = localStorage.getItem(USER_KEY) !== null;
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(ACTIVITY_KEY);
   } catch (e) {
     console.error('Failed to clear session', e);

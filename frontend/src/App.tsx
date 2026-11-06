@@ -230,7 +230,10 @@ export default function App() {
     } catch (err) {
       const message = err instanceof Error ? err.message : '';
       // 401 means the session ended, not that the backend is down
-      if (!message.includes('Unauthorized')) {
+      if (message.includes('Unauthorized')) {
+        clearSession();
+        setCurrentUser(null);
+      } else {
         console.error('Failed to load stats', err);
         setBackendOnline(false);
       }
@@ -243,6 +246,15 @@ export default function App() {
     navigateTo('landing', 'batch-organizer');
     setInitialAuthModal('admin-login');
   };
+
+  useEffect(() => {
+    const handleExpired = () => {
+      clearSession();
+      setCurrentUser(null);
+    };
+    window.addEventListener('session-expired', handleExpired);
+    return () => window.removeEventListener('session-expired', handleExpired);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -280,7 +292,7 @@ export default function App() {
 
   const handleLoginSuccess = (user: User, token: string) => {
     setCurrentUser(user);
-    saveSession(user);
+    saveSession(user, token);
     navigateTo('workspace', 'batch-organizer');
   };
 
@@ -488,6 +500,7 @@ export default function App() {
           <UploadPage
             onUploadSuccess={loadData}
             onNavigate={handleNavigate}
+            onRequireLogin={handleOpenAdminLogin}
           />
         )}
 

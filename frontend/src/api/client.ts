@@ -3,11 +3,17 @@ import { DashboardStats, FileItem, DuplicateGroup, SemanticSearchResult, SystemS
 export const API_BASE = '/api';
 
 /** fetch() for API calls. The session cookie is sent automatically (same-origin). */
-export function authFetch(input: string, init: RequestInit = {}): Promise<Response> {
+export async function authFetch(input: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers || {});
   const auth = getAuthHeaders();
-  if (auth.Authorization) headers.set('Authorization', auth.Authorization);
-  return fetch(input, { credentials: 'same-origin', ...init, headers });
+  if (auth.Authorization && !headers.has('Authorization')) {
+    headers.set('Authorization', auth.Authorization);
+  }
+  const res = await fetch(input, { credentials: 'same-origin', ...init, headers });
+  if (res.status === 401 && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('session-expired'));
+  }
+  return res;
 }
 
 /** Download a protected file: fetch with the token, then save it locally. */
@@ -46,8 +52,14 @@ export function handleApiDownload(e: { preventDefault(): void; currentTarget: HT
 }
 
 
-// Session auth is carried by the httpOnly cookie, so no header is needed.
+// Session auth is carried by the httpOnly cookie and Authorization Bearer header
 function getAuthHeaders(): Record<string, string> {
+  try {
+    const token = localStorage.getItem('file_organizer_token');
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch {}
   return {};
 }
 
@@ -75,7 +87,14 @@ export async function uploadFiles(files: File[]): Promise<{ uploaded_count: numb
     method: 'POST',
     body: formData,
   });
-  if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const data = await res.json();
+      if (data && data.detail) detail = data.detail;
+    } catch {}
+    throw new Error(detail || `Upload failed: ${res.statusText}`);
+  }
   return res.json();
 }
 
