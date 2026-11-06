@@ -29,12 +29,28 @@ CATEGORY_EXTENSIONS = {
 # Domain & Topic patterns checking both filename and extracted text
 TOPIC_RULES = [
     # Academics
+    (r"\bpsp\b|problem\s*solving", "Academics/Problem Solving", "Problem Solving", ["PSP", "Problem Solving", "Academics"]),
+    (r"\bcn\b|computer\s*networks?|\btcp\b|osi\s*model|subnet|routing", "Academics/Computer Networks", "Computer Networks", ["Networks", "CN", "Academics"]),
+    (r"machine\s*learning|\bml\b|neural|deep\s*learning|regression", "Academics/Machine Learning", "Machine Learning", ["ML", "AI", "Academics"]),
+    (r"software\s*engineering|\buml\b|sdlc|use\s*case", "Academics/Software Engineering", "Software Engineering", ["SE", "UML", "Academics"]),
+    (r"compiler|lexical|parsing", "Academics/Compiler Design", "Compiler Design", ["Compilers", "Academics"]),
+    (r"digital\s*logic|flip\s*flop|karnaugh|boolean", "Academics/Digital Logic", "Digital Logic", ["Digital Logic", "Academics"]),
+    (r"lab\s*manual|lab\s*record|practical\s*file", "Academics/Lab Work", "Lab Work", ["Lab", "Practical", "Academics"]),
+    (r"project\s*report|synopsis|mini\s*project", "Academics/Project Reports", "Project Reports", ["Project", "Report", "Academics"]),
     (r"phy\d*|physics|viva|lab\s*viva|optics|spectrometer|galvanometer", "Academics/Physics", "Physics Coursework", ["Physics", "Lab Viva", "Academics"]),
     (r"dsa|algorithm|data\s*struct|array|tree|graph|leetcode|stack|queue", "Academics/Data Structures", "Data Structures & Algorithms", ["DSA", "Algorithms", "Computer Science"]),
     (r"dbms|sql|database|normalization|relational|mongodb", "Academics/Databases", "Database Management", ["DBMS", "SQL", "Databases"]),
     (r"operating\s*system|\bos\b|kernel|process\s*schedul|deadlock|semaphore", "Academics/Operating Systems", "Operating Systems", ["OS", "Kernel", "Academics"]),
     (r"math|calculus|algebra|differential|matrix|statistics|probability", "Academics/Mathematics", "Mathematics", ["Math", "Calculus", "Academics"]),
     (r"chemistry|chemical|organic|titration|reaction", "Academics/Chemistry", "Chemistry", ["Chemistry", "Academics"]),
+    (r"cyber\s*security|ciphers?|information\s*security|cryptanalysis|\bcia\s*triad\b|penetration\s*testing|\brsa\b", "Academics/Cybersecurity", "Cybersecurity & Cryptography", ["Cybersecurity", "Security", "Academics"]),
+    (r"computer\s*organization|computer\s*architecture|\bcoa\b|\bmips\b|instruction\s*set|\brisc\b|\bcisc\b", "Academics/Computer Architecture", "Computer Organization & Architecture", ["COA", "Architecture", "Academics"]),
+    (r"automata|\btoc\b|turing\s*machine|context\s*free\s*grammar|\bcfg\b|\bpda\b|\bdfa\b|\bnfa\b", "Academics/Theory of Computation", "Theory of Computation", ["TOC", "Automata", "Academics"]),
+    (r"cloud\s*computing|\baws\b|virtualization|\bazure\b|\bgcp\b|serverless|distributed\s*systems?", "Academics/Cloud Computing", "Cloud Computing & Distributed Systems", ["Cloud", "Distributed Systems", "Academics"]),
+    (r"microprocessor|microcontroller|\b8086\b|\b8085\b|arm\s*cortex|embedded\s*systems?|\barduino\b|raspberry\s*pi", "Academics/Microprocessors", "Microprocessors & Embedded Systems", ["Microprocessors", "Embedded", "Academics"]),
+    (r"internet\s*of\s*things|\biot\b|sensor\s*networks?|\brfid\b|\bactuators?\b", "Academics/Internet of Things", "Internet of Things", ["IoT", "Sensors", "Academics"]),
+    (r"\bpyq\b|\bpyqs\b|question\s*paper|sample\s*paper|model\s*paper|mid\s*sem|end\s*sem", "Academics/Question Papers", "Question Papers & PYQs", ["PYQ", "Question Paper", "Academics"]),
+    (r"hall\s*ticket|admit\s*card|student\s*id|bonafide|grade\s*card|marksheet|transcripts?", "Academics/Administrative", "Academic Credentials & Admin", ["Admin", "Admit Card", "Academics"]),
     # Hackathons & College Events
     (r"hackloop|hackathon|hacktoberfest|floss\s*fest|finite\s*loop|open\s*source\s*ai|problem\s*statement|scrum", "Events/Hackathons", "Hackathon & Tech Events", ["Hackathon", "Open Source", "Finite Loop"]),
     (r"club|brochure|invitation|fest|workshop|webinar|symposium", "Events/Clubs", "Club & Event Materials", ["Events", "Brochure", "Club"]),
@@ -49,6 +65,7 @@ TOPIC_RULES = [
     (r"invoice|receipt|bill|statement|tax|gst|salary|payslip|budget|expense", "Finance/Invoices", "Invoices & Receipts", ["Finance", "Invoice", "Payments"]),
 
     # Coding & Development
+    (r"\bjava\b|\bc\+\+|\bc\s*programming|\bcpp\b", "Development/Languages", "Programming Languages", ["Java", "C", "Code"]),
     (r"\.py$|python|fastapi|django|flask|pandas|numpy", "Development/Python", "Python Code & Docs", ["Python", "Development", "Code"]),
     (r"\.tsx?$|\.jsx?$|react|javascript|typescript|frontend|tailwind|vite|nextjs", "Development/Web", "Web Development", ["React", "Web Dev", "Code"]),
     (r"github|git\b|readme|api\s*spec|backend|docker|kubernetes", "Development/Projects", "Project Repositories", ["Git", "Projects", "Code"]),
