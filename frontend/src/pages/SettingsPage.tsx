@@ -9,7 +9,6 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertTriangle,
-  ExternalLink,
   Terminal
 } from 'lucide-react';
 import { fetchSystemStatus, clearAllData } from '../api/client';
@@ -102,7 +101,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">FastAPI Backend</h3>
-                  <p className="text-xs text-slate-500">http://127.0.0.1:8000</p>
                 </div>
               </div>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -110,7 +108,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
                 Connected
               </span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
               <div>
                 <span className="text-slate-400 font-medium">Framework:</span>
                 <div className="font-bold text-slate-700 mt-0.5">Python + FastAPI</div>
@@ -118,19 +116,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAd
               <div>
                 <span className="text-slate-400 font-medium">API Version:</span>
                 <div className="font-bold text-slate-700 mt-0.5">{status?.backend?.version || '1.0.0'}</div>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium">Interactive Docs:</span>
-                <div className="mt-0.5">
-                  <a
-                    href="http://127.0.0.1:8000/docs"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-bold text-blue-600 hover:underline inline-flex items-center gap-1"
-                  >
-                    Open Swagger <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
               </div>
             </div>
           </div>

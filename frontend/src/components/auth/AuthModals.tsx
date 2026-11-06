@@ -646,13 +646,6 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                     <label className="block text-xs font-medium text-slate-700">
                       Password *
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => alert('To reset your password, contact support@fileorganizer.ai')}
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      Forgot password?
-                    </button>
                   </div>
                   <div className="relative">
                     <input

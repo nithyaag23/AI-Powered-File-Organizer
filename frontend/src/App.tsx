@@ -444,7 +444,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
               <span>
-                Backend server is connecting at <strong>http://127.0.0.1:8000</strong>. If the server is still booting up, stats will sync automatically.
+                Connecting to the server. Stats will sync automatically.
               </span>
             </div>
             <button
