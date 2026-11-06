@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { searchSemantic, deleteFile, getDownloadUrl } from '../api/client';
+import { searchSemantic, deleteFile, getDownloadUrl, handleApiDownload } from '../api/client';
 import { SemanticSearchResult } from '../types';
 import { formatBytes, formatDate, getCategoryBadgeColor } from '../utils/formatters';
 
@@ -196,7 +196,7 @@ export const AISearchPage: React.FC<AISearchPageProps> = ({ onRefreshStats, olla
                     </div>
                     <div className="flex items-center gap-1 border-l border-slate-100 pl-3">
                       <a
-                        href={getDownloadUrl(item.id)}
+                        href={getDownloadUrl(item.id)} onClick={handleApiDownload}
                         download={item.original_name}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50"
                         title="Download"

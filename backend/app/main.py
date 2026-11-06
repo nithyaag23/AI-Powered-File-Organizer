@@ -2,13 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from .database import init_db
+from .database import init_db, cleanup_expired_sessions
 from .routes import files, duplicates, search, stats, settings, auth
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize database tables and directories on startup
     init_db()
+    cleanup_expired_sessions()
     yield
 
 app = FastAPI(
@@ -27,11 +28,18 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000"
     ],
-    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "same-origin")
+    return response
 
 # Include routers
 app.include_router(auth.router)

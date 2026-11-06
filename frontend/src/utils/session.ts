@@ -4,13 +4,11 @@ import { User } from '../types';
 export const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
 
 const USER_KEY = 'file_organizer_user';
-const TOKEN_KEY = 'file_organizer_token';
 const ACTIVITY_KEY = 'file_organizer_last_active';
 
-export function saveSession(user: User, token: string): void {
+export function saveSession(user: User): void {
   try {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
-    localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(ACTIVITY_KEY, Date.now().toString());
   } catch (e) {
     console.error('Failed to save session', e);
@@ -27,13 +25,12 @@ export function updateSessionActivity(): void {
   }
 }
 
-export function getActiveSession(): { user: User; token: string } | null {
+export function getActiveSession(): { user: User } | null {
   try {
     const userStr = localStorage.getItem(USER_KEY);
-    const token = localStorage.getItem(TOKEN_KEY);
     const lastActiveStr = localStorage.getItem(ACTIVITY_KEY);
 
-    if (!userStr || !token || !lastActiveStr) {
+    if (!userStr || !lastActiveStr) {
       clearSession();
       return null;
     }
@@ -50,7 +47,7 @@ export function getActiveSession(): { user: User; token: string } | null {
     // Refresh activity timestamp on successful retrieval
     localStorage.setItem(ACTIVITY_KEY, now.toString());
     const user: User = JSON.parse(userStr);
-    return { user, token };
+    return { user };
   } catch {
     clearSession();
     return null;
@@ -58,11 +55,16 @@ export function getActiveSession(): { user: User; token: string } | null {
 }
 
 export function clearSession(): void {
+  let hadSession = false;
   try {
+    hadSession = localStorage.getItem(USER_KEY) !== null;
     localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(ACTIVITY_KEY);
   } catch (e) {
     console.error('Failed to clear session', e);
+  }
+  // Only end the server session when one existed, so page loads don't send logout calls
+  if (hadSession) {
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
   }
 }

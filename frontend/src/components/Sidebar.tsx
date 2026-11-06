@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard,
   UploadCloud,
+  Upload,
   FolderOpen,
   Copy,
   Layers,
@@ -60,6 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems = [
     { id: 'batch-organizer' as PageId, label: 'Batch Organizer (ZIP)', icon: Layers, badge: 'Main' },
+    { id: 'upload' as PageId, label: 'Upload Files', icon: Upload },
     { id: 'dashboard' as PageId, label: 'Overview Vault', icon: LayoutDashboard },
     { id: 'all-files' as PageId, label: 'All Files', icon: FolderOpen },
     { id: 'duplicates' as PageId, label: 'Duplicates', icon: Copy },

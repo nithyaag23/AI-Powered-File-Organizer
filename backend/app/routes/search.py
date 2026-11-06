@@ -5,7 +5,10 @@ from ..services.ollama_service import ollama_service
 from ..services.chroma_service import chroma_service
 from ..database import get_file_by_id, list_files
 
-router = APIRouter(prefix="/api/search", tags=["search"])
+from fastapi import Depends
+from ..services.auth_service import get_current_user
+
+router = APIRouter(prefix="/api/search", tags=["search"], dependencies=[Depends(get_current_user)])
 
 @router.get("/semantic")
 def semantic_search(

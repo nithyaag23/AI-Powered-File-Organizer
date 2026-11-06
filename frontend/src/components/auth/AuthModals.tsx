@@ -103,12 +103,12 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
   // The 5 visual conditions matching page 3 of user manual
   const hasMinLength = password.length >= 10;
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasLowercase = /[a-z]/.test(password);
+  const hasLetter = /[a-zA-Z]/.test(password);
   const hasDigit = /[0-9]/.test(password);
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>_+=~`\-/\\[\]]/.test(password);
+  // Same special-character set as the backend validator
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>[\]\\/`~_+=;' -]/.test(password);
 
-  const isPasswordValid = hasMinLength && (hasUppercase || hasLowercase) && hasDigit && hasSpecial;
+  const isPasswordValid = hasMinLength && hasLetter && hasDigit && hasSpecial;
 
   // Handle Password submission (Initiates Login or Registration)
   const handleSubmit = async (e: React.FormEvent) => {
@@ -535,14 +535,9 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                     <span>at least 10 characters</span>
                   </div>
 
-                  <div className={`flex items-center gap-1.5 ${hasUppercase ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
-                    <Check className={`w-3.5 h-3.5 ${hasUppercase ? 'text-emerald-600 stroke-[3]' : 'text-slate-300'}`} />
-                    <span>an uppercase letter</span>
-                  </div>
-
-                  <div className={`flex items-center gap-1.5 ${hasLowercase ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
-                    <Check className={`w-3.5 h-3.5 ${hasLowercase ? 'text-emerald-600 stroke-[3]' : 'text-slate-300'}`} />
-                    <span>a lowercase letter</span>
+                  <div className={`flex items-center gap-1.5 ${hasLetter ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                    <Check className={`w-3.5 h-3.5 ${hasLetter ? 'text-emerald-600 stroke-[3]' : 'text-slate-300'}`} />
+                    <span>a letter</span>
                   </div>
 
                   <div className={`flex items-center gap-1.5 ${hasDigit ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>

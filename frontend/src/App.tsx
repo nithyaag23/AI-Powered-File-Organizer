@@ -204,6 +204,11 @@ export default function App() {
   }, [darkContrast]);
 
   const loadData = async () => {
+    // Data endpoints require sign-in; nothing to load for a signed-out visitor
+    if (!getActiveSession()) {
+      setLoading(false);
+      return;
+    }
     try {
       const [statsData, statusData] = await Promise.all([
         fetchStats(),
@@ -213,8 +218,12 @@ export default function App() {
       setSystemStatus(statusData);
       setBackendOnline(true);
     } catch (err) {
-      console.error('Failed to connect to backend', err);
-      setBackendOnline(false);
+      const message = err instanceof Error ? err.message : '';
+      // 401 means the session ended, not that the backend is down
+      if (!message.includes('Unauthorized')) {
+        console.error('Failed to connect to backend', err);
+        setBackendOnline(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -256,7 +265,7 @@ export default function App() {
 
   const handleLoginSuccess = (user: User, token: string) => {
     setCurrentUser(user);
-    saveSession(user, token);
+    saveSession(user);
     navigateTo('workspace', 'batch-organizer');
   };
 
@@ -490,7 +499,7 @@ export default function App() {
         )}
 
         {currentPage === 'settings' && (
-          <SettingsPage onRefreshStats={loadData} />
+          <SettingsPage onRefreshStats={loadData} isAdmin={currentUser?.role === 'admin'} />
         )}
       </main>
     </div>

@@ -11,6 +11,8 @@ load_dotenv(BASE_DIR / ".env")
 UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+MAX_UPLOAD_BYTES = int(float(os.getenv("MAX_UPLOAD_MB", "100")) * 1024 * 1024)
+
 BATCH_TEMP_DIR = BASE_DIR / "batch_vault"
 BATCH_TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -33,6 +35,12 @@ SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "FileOrganizer AI")
 
 # Frontend Web Application URL
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+
+# Session cookie settings (set COOKIE_SECURE=true when serving over HTTPS)
+SESSION_COOKIE_NAME = "fo_session"
+SESSION_COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+# Sessions expire after this many minutes without a request (server-side)
+SESSION_IDLE_MINUTES = int(os.getenv("SESSION_IDLE_MINUTES", "30"))
 
 # Token expiration & rate-limiting parameters
 VERIFICATION_TOKEN_EXPIRE_HOURS = int(os.getenv("VERIFICATION_TOKEN_EXPIRE_HOURS", "24"))
