@@ -20,7 +20,7 @@ import {
 import { DashboardStats, CategoryName, FileItem } from '../types';
 import { formatBytes, formatDate, getCategoryBadgeColor } from '../utils/formatters';
 import { PageId } from '../components/Sidebar';
-import { getDownloadUrl, getOrganizedZipUrl } from '../api/client';
+import { getDownloadUrl, getOrganizedZipUrl, handleApiDownload } from '../api/client';
 
 interface DashboardPageProps {
   stats: DashboardStats | null;
@@ -79,7 +79,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
         <div className="flex items-center gap-3">
           {totalFiles > 0 && (
-            <a href={getOrganizedZipUrl()} className="btn-secondary" title="Download all files neatly sorted into folders">
+            <a href={getOrganizedZipUrl()} onClick={handleApiDownload} className="btn-secondary" title="Download all files neatly sorted into folders">
               <Package className="w-4 h-4 text-blue-600" />
               Download Organized ZIP
             </a>
@@ -290,7 +290,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                         <td className="px-5 py-3.5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <a
-                              href={getDownloadUrl(f.id)}
+                              href={getDownloadUrl(f.id)} onClick={handleApiDownload}
                               download={f.clean_name || f.original_name}
                               className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                               title="Download"

@@ -4,7 +4,10 @@ from ..database import get_duplicate_groups, delete_file_record
 from ..services.chroma_service import chroma_service
 from ..models import CleanupDuplicatesRequest
 
-router = APIRouter(prefix="/api/duplicates", tags=["duplicates"])
+from fastapi import Depends
+from ..services.auth_service import get_current_user
+
+router = APIRouter(prefix="/api/duplicates", tags=["duplicates"], dependencies=[Depends(get_current_user)])
 
 @router.get("")
 def read_duplicates():
@@ -20,8 +23,13 @@ def cleanup_duplicates(payload: CleanupDuplicatesRequest):
         # Delete specific chosen IDs
         ids_to_delete = set(payload.specific_file_ids)
         for g in groups:
+            remaining = len(g["files"])
             for f in g["files"]:
                 if f["id"] in ids_to_delete:
+                    # Never delete the last remaining copy of a file
+                    if remaining <= 1:
+                        continue
+                    remaining -= 1
                     rec = delete_file_record(f["id"])
                     if rec:
                         try:

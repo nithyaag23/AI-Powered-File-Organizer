@@ -413,7 +413,8 @@ def test_email_delivery_failure_on_login():
 
 def test_protected_endpoints_require_otp_session_token():
     """Test that protected endpoints reject unauthorized requests without valid session."""
-    # 1. No token
+    # 1. No token (clear the session cookie left behind by earlier login tests)
+    client.cookies.clear()
     res1 = client.get("/api/auth/me")
     assert res1.status_code == 401
     assert "authentication required" in res1.json()["detail"].lower()

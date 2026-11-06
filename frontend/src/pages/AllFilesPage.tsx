@@ -9,7 +9,7 @@ import {
   Package,
   Tag
 } from 'lucide-react';
-import { fetchFiles, deleteFile, getDownloadUrl, getOrganizedZipUrl } from '../api/client';
+import { fetchFiles, deleteFile, getDownloadUrl, getOrganizedZipUrl, handleApiDownload } from '../api/client';
 import { FileItem, CategoryName } from '../types';
 import { formatBytes, formatDate, getCategoryBadgeColor } from '../utils/formatters';
 
@@ -84,7 +84,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
 
         <div>
           <a
-            href={getOrganizedZipUrl()}
+            href={getOrganizedZipUrl()} onClick={handleApiDownload}
             className="btn-primary"
             title="Download ZIP with all files structured into folders"
           >
@@ -224,7 +224,7 @@ export const AllFilesPage: React.FC<AllFilesPageProps> = ({ onRefreshStats }) =>
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <a
-                            href={getDownloadUrl(file.id)}
+                            href={getDownloadUrl(file.id)} onClick={handleApiDownload}
                             download={file.clean_name || file.original_name}
                             className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                             title="Download with Clean Name"

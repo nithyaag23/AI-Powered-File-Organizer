@@ -2,7 +2,7 @@ import re
 import hashlib
 import secrets
 from typing import Tuple, Optional, Dict, Any
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 security = HTTPBearer(auto_error=False)
@@ -32,18 +32,24 @@ def validate_password(password: str) -> Tuple[bool, str]:
 
     return True, "Password is valid."
 
+PBKDF2_ITERATIONS = 310_000  # OWASP-recommended minimum for PBKDF2-HMAC-SHA256
+
 def hash_password(password: str) -> str:
-    """Generate salted SHA-256 hash."""
+    """Hash a password with salted PBKDF2-HMAC-SHA256 (deliberately slow to resist brute force)."""
     salt = secrets.token_hex(16)
-    key = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
-    return f"{salt}${key}"
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), PBKDF2_ITERATIONS).hex()
+    return f"pbkdf2_sha256${PBKDF2_ITERATIONS}${salt}${key}"
 
 def verify_password(password: str, stored_hash: str) -> bool:
-    """Verify password against salted hash."""
+    """Verify a password. Legacy fast-SHA-256 records ("salt$hash") remain verifiable so existing accounts keep working."""
     try:
+        if stored_hash.startswith("pbkdf2_sha256$"):
+            _, iterations, salt, key = stored_hash.split("$", 3)
+            expected = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), int(iterations)).hex()
+            return secrets.compare_digest(key, expected)
         salt, key = stored_hash.split("$", 1)
-        expected_key = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
-        return secrets.compare_digest(key, expected_key)
+        expected = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+        return secrets.compare_digest(key, expected)
     except Exception:
         return False
 
@@ -82,22 +88,32 @@ def generate_challenge_id() -> str:
     """Generate a random, URL-safe challenge token identifier."""
     return f"ch_{secrets.token_urlsafe(32)}"
 
-def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Dict[str, Any]:
+def get_session_token(request: Request, credentials: Optional[HTTPAuthorizationCredentials] = None) -> Optional[str]:
+    """Session token from the httpOnly cookie, or from a Bearer header (API clients)."""
+    from ..config import SESSION_COOKIE_NAME
+    cookie_token = request.cookies.get(SESSION_COOKIE_NAME)
+    if cookie_token:
+        return cookie_token.strip()
+    if credentials and credentials.credentials:
+        return credentials.credentials.strip()
+    return None
+
+def get_current_user(request: Request, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Dict[str, Any]:
     """
     FastAPI dependency that enforces authenticated session access on protected routes.
-    Validates Bearer session token against active sessions table in database.
+    Validates the session token (cookie or Bearer) against the sessions table.
     """
     from ..database import get_session_by_token, get_user_by_id
 
-    if not credentials or not credentials.credentials:
+    raw_token = get_session_token(request, credentials)
+    if not raw_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required. Please log in with email and OTP.",
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    token = credentials.credentials.strip()
-    session = get_session_by_token(token)
+    session = get_session_by_token(raw_token)
     if not session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

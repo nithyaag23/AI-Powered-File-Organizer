@@ -1,5 +1,5 @@
 import shutil
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pathlib import Path
 
 from ..config import UPLOAD_DIR, CHROMA_DIR, DB_PATH, OLLAMA_BASE_URL, DEFAULT_EMBED_MODEL
@@ -11,16 +11,15 @@ from ..database import clear_all_records, get_stats
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
 @router.get("/status")
-def system_status():
+def system_status(current_user: dict = Depends(get_current_user)):
     ollama_info = ollama_service.check_health()
     stats = get_stats()
 
     chroma_count = 0
     chroma_ok = False
     try:
-        if chroma_service.collection:
-            chroma_count = chroma_service.collection.count()
-            chroma_ok = True
+        chroma_count = chroma_service.total_count()
+        chroma_ok = chroma_service.client is not None
     except Exception:
         pass
 
@@ -53,6 +52,8 @@ def system_status():
 
 @router.post("/clear-all")
 def clear_all(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required.")
     # Clear database records
     deleted_count = clear_all_records()
 

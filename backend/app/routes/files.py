@@ -8,7 +8,7 @@ from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query, BackgroundTasks
 from fastapi.responses import FileResponse
 
-from ..config import UPLOAD_DIR, BATCH_TEMP_DIR
+from ..config import UPLOAD_DIR, BATCH_TEMP_DIR, MAX_UPLOAD_BYTES
 from ..database import (
     insert_file,
     list_files,
@@ -27,7 +27,31 @@ from ..services.category_service import (
 from ..services.ollama_service import ollama_service
 from ..services.chroma_service import chroma_service
 
-router = APIRouter(prefix="/api/files", tags=["files"])
+from fastapi import Depends
+from ..services.auth_service import get_current_user
+
+def _save_upload(src, dest: Path) -> None:
+    """Stream an upload to disk, enforcing MAX_UPLOAD_BYTES. Removes partial files on rejection."""
+    try:
+        written = 0
+        with open(dest, "wb") as buf:
+            while chunk := src.read(1024 * 1024):
+                written += len(chunk)
+                if written > MAX_UPLOAD_BYTES:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"File exceeds the {MAX_UPLOAD_BYTES // (1024 * 1024)} MB upload limit."
+                    )
+                buf.write(chunk)
+    except HTTPException:
+        dest.unlink(missing_ok=True)
+        raise
+
+def _safe_name(filename: Optional[str]) -> str:
+    """Keep only the final path component so uploads can't inject directories."""
+    return Path(filename or "unnamed_file").name or "unnamed_file"
+
+router = APIRouter(prefix="/api/files", tags=["files"], dependencies=[Depends(get_current_user)])
 
 @router.post("/batch-process")
 async def batch_process(
@@ -55,10 +79,9 @@ async def batch_process(
     wasted_bytes = 0
 
     for f in files:
-        original_name = f.filename or "unnamed_file"
+        original_name = _safe_name(f.filename)
         temp_file_path = input_dir / f"{uuid.uuid4().hex}_{original_name}"
-        with open(temp_file_path, "wb") as buf:
-            shutil.copyfileobj(f.file, buf)
+        _save_upload(f.file, temp_file_path)
 
         file_size = temp_file_path.stat().st_size
         file_hash = compute_sha256(temp_file_path)
@@ -80,6 +103,22 @@ async def batch_process(
                 except Exception:
                     pass
                 continue
+
+        # Already in the library? Skip it the same way single upload reports duplicates
+        existing = get_files_by_hash(file_hash)
+        if existing and remove_duplicates:
+            wasted_bytes += file_size
+            duplicate_files.append({
+                "original_name": original_name,
+                "duplicate_of": existing[0]["original_name"],
+                "file_size": file_size,
+                "hash": file_hash
+            })
+            try:
+                temp_file_path.unlink()
+            except Exception:
+                pass
+            continue
 
         # Unique file - classify content
         file_id = str(uuid.uuid4())
@@ -213,14 +252,13 @@ async def upload_files(files: List[UploadFile] = File(...)):
     results = []
     for file in files:
         file_id = str(uuid.uuid4())
-        original_name = file.filename or "unnamed_file"
+        original_name = _safe_name(file.filename)
         ext = Path(original_name).suffix.lower()
         stored_name = f"{file_id}{ext}"
         saved_path = UPLOAD_DIR / stored_name
 
-        # Save file to disk
-        with open(saved_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # Save file to disk (size-limited)
+        _save_upload(file.file, saved_path)
 
         file_size = saved_path.stat().st_size
         file_hash = compute_sha256(saved_path)
@@ -310,8 +348,10 @@ def reorganize_files():
     """Re-analyze all files in the vault and apply smart subfolder & topic classification."""
     all_files = list_files()
     updated = []
+    reembedded = 0
     for f in all_files:
-        analysis = analyze_file_content(f["original_name"], f["mime_type"], f.get("extracted_text", "") or "")
+        extracted = f.get("extracted_text", "") or ""
+        analysis = analyze_file_content(f["original_name"], f["mime_type"], extracted)
         update_file_organization(
             file_id=f["id"],
             subfolder=analysis["subfolder"],
@@ -319,6 +359,30 @@ def reorganize_files():
             clean_name=analysis["clean_name"],
             tags=analysis["tags"]
         )
+
+        # Re-embed with the same text/metadata as upload. Only update the vector index
+        # when Ollama is available, so files are never moved to the offline vector size.
+        text_for_embedding = f"{analysis['clean_name']} {analysis['topic']} {analysis['subfolder']}. {extracted}"
+        embedding = ollama_service.generate_embedding(text_for_embedding)
+        if embedding is not None:
+            chroma_service.add_file(
+                file_id=f["id"],
+                document_text=text_for_embedding,
+                metadata={
+                    "id": f["id"],
+                    "original_name": f["original_name"],
+                    "clean_name": analysis["clean_name"],
+                    "category": f["category"],
+                    "subfolder": analysis["subfolder"],
+                    "topic": analysis["topic"],
+                    "file_size": f["file_size"],
+                    "extension": f.get("extension", ""),
+                    "file_hash": f["file_hash"]
+                },
+                embedding=embedding
+            )
+            reembedded += 1
+
         updated.append({
             "id": f["id"],
             "original_name": f["original_name"],
@@ -326,7 +390,13 @@ def reorganize_files():
             "subfolder": analysis["subfolder"],
             "topic": analysis["topic"]
         })
-    return {"status": "success", "reorganized_count": len(updated), "files": updated}
+    return {
+        "status": "success",
+        "reorganized_count": len(updated),
+        "reembedded_count": reembedded,
+        "ollama_available": ollama_service.check_health()["connected"],
+        "files": updated
+    }
 
 @router.get("/download-organized-zip")
 def download_organized_zip(background_tasks: BackgroundTasks):

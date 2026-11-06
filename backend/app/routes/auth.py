@@ -3,12 +3,14 @@ import secrets
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException, status, Query, Depends
+from fastapi import APIRouter, HTTPException, status, Query, Depends, Request, Response
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials
 
 from ..config import (
     FRONTEND_URL,
+    SESSION_COOKIE_NAME,
+    SESSION_COOKIE_SECURE,
     VERIFICATION_TOKEN_EXPIRE_HOURS,
     RESEND_RATE_LIMIT_SECONDS
 )
@@ -22,6 +24,7 @@ from ..services.auth_service import (
     hash_otp,
     generate_challenge_id,
     get_current_user,
+    get_session_token,
     security
 )
 from ..services.email_service import (
@@ -55,6 +58,7 @@ from ..database import (
     update_login_challenge_otp,
     mark_challenge_used,
     invalidate_user_login_challenges,
+    get_login_challenge_times_since,
     create_session,
     delete_session_by_token,
     list_users
@@ -149,7 +153,8 @@ def register(payload: AuthRequest):
 
     # Hash password and prepare role
     pw_hash = hash_password(payload.password)
-    role = "admin" if payload.role and payload.role.lower() == "admin" else "user"
+    # Self-service sign-up always creates standard users. Admins are provisioned server-side only.
+    role = "user"
 
     # Generate single-use, expiring verification token & 6-digit OTP
     raw_token, token_hash = generate_verification_token()
@@ -196,6 +201,18 @@ def register(payload: AuthRequest):
         "expires_in": 300
     }
 
+def _set_session_cookie(response: Response, token: str) -> None:
+    """Store the session token in an httpOnly cookie so page scripts cannot read it."""
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=token,
+        max_age=7 * 24 * 60 * 60,
+        httponly=True,
+        secure=SESSION_COOKIE_SECURE,
+        samesite="strict",
+        path="/",
+    )
+
 @router.post("/login", response_model=LoginChallengeResponse)
 def login(payload: AuthRequest):
     """
@@ -210,7 +227,8 @@ def login(payload: AuthRequest):
     # Prevent email enumeration: timing-safe dummy password check if user not found
     if not user:
         pending = get_pending_registration_by_email(email)
-        if pending:
+        # Only reveal "pending verification" to someone who knows the pending password
+        if pending and verify_password(payload.password, pending["password_hash"]):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Your email address has not been verified yet. Please check your inbox for the verification link to complete creating your account."
@@ -239,6 +257,21 @@ def login(payload: AuthRequest):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This sign-in accepts Admin accounts only. Access refused with AUTH_FORBIDDEN."
+        )
+
+    # Rate limit new login codes. Each code grants 5 fresh guesses, so unlimited
+    # re-logins would bypass the per-challenge lockout.
+    now = datetime.utcnow()
+    recent = get_login_challenge_times_since(user["id"], (now - timedelta(minutes=15)).isoformat())
+    if recent and (now - datetime.fromisoformat(recent[0])).total_seconds() < 60:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Please wait a minute before requesting another login code."
+        )
+    if len(recent) >= 3:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login code requests. Please try again in 15 minutes."
         )
 
     # Invalidate previous login challenges for this user
@@ -276,7 +309,7 @@ def login(payload: AuthRequest):
     }
 
 @router.post("/verify-otp", response_model=AuthResponse)
-def verify_otp(payload: VerifyOtpRequest):
+def verify_otp(payload: VerifyOtpRequest, response: Response):
     """
     Verifies 6-digit OTP for:
     1) Account creation & email verification
@@ -352,6 +385,7 @@ def verify_otp(payload: VerifyOtpRequest):
         session_token = f"tok_{uuid.uuid4().hex}"
         session_expires = (datetime.utcnow() + timedelta(days=7)).isoformat()
         create_session(new_user["id"], session_token, session_expires)
+        _set_session_cookie(response, session_token)
 
         return {
             "token": session_token,
@@ -436,6 +470,7 @@ def verify_otp(payload: VerifyOtpRequest):
     session_token = f"tok_{uuid.uuid4().hex}"
     session_expires = (datetime.utcnow() + timedelta(days=7)).isoformat()
     create_session(user["id"], session_token, session_expires)
+    _set_session_cookie(response, session_token)
 
     return {
         "token": session_token,
@@ -580,12 +615,14 @@ def get_current_user_profile(current_user: Dict[str, Any] = Depends(get_current_
     }
 
 @router.post("/logout")
-def logout(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+def logout(request: Request, response: Response, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
     """
-    Terminates the active session token in the database.
+    Terminates the active session token in the database and clears the session cookie.
     """
-    if credentials and credentials.credentials:
-        delete_session_by_token(credentials.credentials)
+    token = get_session_token(request, credentials)
+    if token:
+        delete_session_by_token(token)
+    response.delete_cookie(key=SESSION_COOKIE_NAME, path="/")
     return {"success": True, "message": "Successfully logged out."}
 
 @router.post("/verify-email", response_model=VerifyEmailResponse)
@@ -764,7 +801,7 @@ def resend_verification(payload: ResendVerificationRequest):
 
 @router.get("/users")
 def get_users(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """
-    Protected endpoint: only accessible to authenticated users (and admin).
-    """
+    """Admin-only: list registered accounts (password hashes are never returned)."""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required.")
     return list_users()

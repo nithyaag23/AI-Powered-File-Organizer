@@ -14,7 +14,7 @@ import {
   Trash2,
   HardDrive
 } from 'lucide-react';
-import { processBatchFiles, getBatchDownloadUrl } from '../api/client';
+import { processBatchFiles, getBatchDownloadUrl, handleApiDownload } from '../api/client';
 import { BatchProcessResult } from '../types';
 
 export const BatchOrganizerPage: React.FC = () => {
@@ -278,7 +278,7 @@ export const BatchOrganizerPage: React.FC = () => {
 
             <div className="flex items-center gap-3 shrink-0">
               <a
-                href={getBatchDownloadUrl(result.session_id)}
+                href={getBatchDownloadUrl(result.session_id)} onClick={handleApiDownload}
                 download="Organized_Files.zip"
                 className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md transition-all flex items-center gap-2"
               >

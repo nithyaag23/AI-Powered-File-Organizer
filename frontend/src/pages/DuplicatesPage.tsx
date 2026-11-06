@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, Trash2, CheckCircle2, ShieldCheck, Download, AlertCircle, RefreshCw } from 'lucide-react';
-import { fetchDuplicates, cleanupDuplicates, deleteFile, getDownloadUrl } from '../api/client';
+import { fetchDuplicates, cleanupDuplicates, deleteFile, getDownloadUrl, handleApiDownload } from '../api/client';
 import { DuplicateGroup } from '../types';
 import { formatBytes, formatDate, getCategoryBadgeColor } from '../utils/formatters';
 
@@ -199,7 +199,7 @@ export const DuplicatesPage: React.FC<DuplicatesPageProps> = ({ onRefreshStats }
                         </span>
                         <div className="flex items-center gap-1.5">
                           <a
-                            href={getDownloadUrl(file.id)}
+                            href={getDownloadUrl(file.id)} onClick={handleApiDownload}
                             download={file.original_name}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50"
                             title="Download Copy"

@@ -17,10 +17,11 @@ import { SystemStatus } from '../types';
 import { formatBytes } from '../utils/formatters';
 
 interface SettingsPageProps {
+  isAdmin?: boolean;
   onRefreshStats: () => void;
 }
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats, isAdmin = false }) => {
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
@@ -253,13 +254,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshStats }) =>
                 Permanently wipes all uploaded files from disk, resets SQLite file registry, and empties ChromaDB vectors.
               </p>
             </div>
-            <button
+            {isAdmin && (<button
               onClick={handleClearAll}
               disabled={resetting}
               className="btn-danger"
             >
               {resetting ? 'Resetting...' : 'Reset All Files & Database'}
-            </button>
+            </button>)}
           </div>
         </div>
       )}

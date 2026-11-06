@@ -137,7 +137,7 @@ def send_otp_email(to_email: str, otp_code: str, user_role: str = "user") -> Non
     clean_user, clean_password, sender_email, sender_name = _get_smtp_credentials()
 
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"{otp_code} is your FileOrganizer AI login code"
+    msg["Subject"] = "Your FileOrganizer AI login code"
     msg["From"] = formataddr((sender_name, sender_email))
     msg["To"] = to_email
 

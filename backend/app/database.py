@@ -4,8 +4,16 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from .config import DB_PATH
 
+class _ManagedConnection(sqlite3.Connection):
+    """Commits/rolls back like sqlite3's default context manager, and also closes the connection."""
+    def __exit__(self, exc_type, exc, tb):
+        try:
+            return super().__exit__(exc_type, exc, tb)
+        finally:
+            self.close()
+
 def get_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(str(DB_PATH))
+    conn = sqlite3.connect(str(DB_PATH), factory=_ManagedConnection)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -126,6 +134,9 @@ def init_db():
         if "last_verification_sent_at" not in existing_user_cols:
             cursor.execute("ALTER TABLE users ADD COLUMN last_verification_sent_at TEXT")
 
+        cursor.execute("PRAGMA table_info(sessions)")
+        if "last_seen_at" not in [r[1] for r in cursor.fetchall()]:
+            cursor.execute("ALTER TABLE sessions ADD COLUMN last_seen_at TEXT")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_file_hash ON files(file_hash)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_category ON files(category)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_subfolder ON files(subfolder)")
@@ -584,28 +595,63 @@ def list_users() -> List[Dict[str, Any]]:
         cursor.execute("SELECT id, email, role, is_verified, created_at FROM users ORDER BY created_at ASC")
         return [dict(row) for row in cursor.fetchall()]
 
+LEGACY_DEFAULT_ACCOUNTS = {
+    # id: (email, publicly documented default password) from earlier versions
+    "admin-default-id": ("admin@fileorganizer.ai", "Admin@12345#"),
+    "user-default-id": ("user@fileorganizer.ai", "User@12345#"),
+}
+
 def seed_default_users():
-    """Seed default admin and user if not exists."""
-    from .services.auth_service import hash_password
+    """
+    Bootstrap an admin ONLY when SEED_ADMIN_PASSWORD is set in the environment.
+    No default credentials are shipped. Also removes legacy default accounts
+    that still carry their publicly known passwords.
+    """
+    import os
+    import uuid
+    from .services.auth_service import hash_password, verify_password
+
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) as count FROM users")
-        count = cursor.fetchone()["count"]
-        if count == 0:
-            # Passwords fulfill: alphabet, integer, special char, len >= 10
-            admin_hash = hash_password("Admin@12345#")
-            user_hash = hash_password("User@12345#")
+
+        # Remove legacy default accounts that still use the known default password
+        for legacy_id, (_, legacy_pw) in LEGACY_DEFAULT_ACCOUNTS.items():
+            cursor.execute("SELECT id, password_hash FROM users WHERE id = ?", (legacy_id,))
+            row = cursor.fetchone()
+            if row and verify_password(legacy_pw, row["password_hash"]):
+                cursor.execute("DELETE FROM sessions WHERE user_id = ?", (legacy_id,))
+                cursor.execute("DELETE FROM login_challenges WHERE user_id = ?", (legacy_id,))
+                cursor.execute("DELETE FROM email_verification_tokens WHERE user_id = ?", (legacy_id,))
+                cursor.execute("DELETE FROM users WHERE id = ?", (legacy_id,))
+        conn.commit()
+
+        seed_password = os.getenv("SEED_ADMIN_PASSWORD", "")
+        seed_email = os.getenv("SEED_ADMIN_EMAIL", "admin@fileorganizer.ai").strip().lower()
+        if not seed_password:
+            return
+
+        cursor.execute("SELECT COUNT(*) as count FROM users WHERE role = 'admin'")
+        if cursor.fetchone()["count"] == 0:
+            now = datetime.utcnow().isoformat()
             cursor.execute("""
                 INSERT INTO users (id, email, password_hash, role, is_verified, last_verification_sent_at, created_at)
-                VALUES
-                ('admin-default-id', 'admin@fileorganizer.ai', ?, 'admin', 1, NULL, ?),
-                ('user-default-id', 'user@fileorganizer.ai', ?, 'user', 1, NULL, ?)
-            """, (admin_hash, datetime.utcnow().isoformat(), user_hash, datetime.utcnow().isoformat()))
+                VALUES (?, ?, ?, 'admin', 1, NULL, ?)
+            """, (str(uuid.uuid4()), seed_email, hash_password(seed_password), now))
             conn.commit()
 
 # ==============================================================================
 # Login Challenge & OTP Management
 # ==============================================================================
+
+def get_login_challenge_times_since(user_id: str, since_iso: str) -> List[str]:
+    """Creation timestamps of this user's login challenges since the given time, newest first."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT created_at FROM login_challenges WHERE user_id = ? AND created_at > ? ORDER BY created_at DESC",
+            (user_id, since_iso)
+        )
+        return [row["created_at"] for row in cursor.fetchall()]
 
 def create_login_challenge(user_id: str, challenge_id: str, otp_hash: str, expires_at_iso: str) -> Dict[str, Any]:
     import uuid
@@ -686,15 +732,16 @@ def invalidate_user_login_challenges(user_id: str) -> None:
 def create_session(user_id: str, raw_token: str, expires_at_iso: str) -> Dict[str, Any]:
     import uuid
     from .services.auth_service import hash_token
+    cleanup_expired_sessions()
     session_id = str(uuid.uuid4())
     token_hash = hash_token(raw_token)
     now = datetime.utcnow().isoformat()
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at)
-            VALUES (?, ?, ?, ?, ?)
-        """, (session_id, user_id, token_hash, now, expires_at_iso))
+            INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at, last_seen_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (session_id, user_id, token_hash, now, expires_at_iso, now))
         conn.commit()
     return {
         "id": session_id,
@@ -705,9 +752,12 @@ def create_session(user_id: str, raw_token: str, expires_at_iso: str) -> Dict[st
     }
 
 def get_session_by_token(raw_token: str) -> Optional[Dict[str, Any]]:
+    """Return the session if it is unexpired and not idle too long; refreshes last_seen_at."""
     from .services.auth_service import hash_token
+    from .config import SESSION_IDLE_MINUTES
     token_hash = hash_token(raw_token)
-    now = datetime.utcnow().isoformat()
+    now_dt = datetime.utcnow()
+    now = now_dt.isoformat()
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
@@ -715,7 +765,21 @@ def get_session_by_token(raw_token: str) -> Optional[Dict[str, Any]]:
             WHERE token_hash = ? AND expires_at > ?
         """, (token_hash, now))
         row = cursor.fetchone()
-        return dict(row) if row else None
+        if not row:
+            return None
+        session = dict(row)
+        last_seen = session.get("last_seen_at") or session.get("created_at")
+        try:
+            idle = (now_dt - datetime.fromisoformat(last_seen)).total_seconds() > SESSION_IDLE_MINUTES * 60
+        except Exception:
+            idle = False
+        if idle:
+            cursor.execute("DELETE FROM sessions WHERE id = ?", (session["id"],))
+            conn.commit()
+            return None
+        cursor.execute("UPDATE sessions SET last_seen_at = ? WHERE id = ?", (now, session["id"]))
+        conn.commit()
+        return session
 
 def delete_session_by_token(raw_token: str) -> None:
     from .services.auth_service import hash_token
